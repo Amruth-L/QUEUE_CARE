@@ -15,7 +15,6 @@ import {
   Info,
   MapPin,
   MessageCircle,
-  Pause,
   Phone,
   QrCode,
   RefreshCw,
@@ -26,17 +25,158 @@ import {
   Stethoscope,
   Users,
   X,
-  Zap
+  Zap,
 } from "lucide-react";
 import type { QueueEntry, QueueState } from "./types";
 import { aheadFor, currentToken, formatRelativeTime, queueStore } from "./store";
 
 const useQueue = () => useSyncExternalStore(queueStore.subscribe, queueStore.getState, queueStore.getState);
 
+/* ─── Shared primitive components ───────────────── */
+
+/** Primary CTA button — dark navy fill */
+function BtnPrimary({
+  onClick, disabled, children, className = "",
+}: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white shadow-btn transition-all duration-150
+        hover:bg-ink-soft hover:-translate-y-px hover:shadow-btn-lg
+        active:scale-[.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+        ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Accent button — emerald fill */
+function BtnAccent({
+  onClick, disabled, children, className = "",
+}: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-emerald px-5 py-3 text-sm font-bold text-white shadow-btn-emerald border border-emerald-dark transition-all duration-150
+        hover:bg-emerald-dark hover:-translate-y-px hover:shadow-btn-emerald-lg
+        active:scale-[.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+        ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Ghost / secondary button — white surface with border */
+function BtnGhost({
+  onClick, disabled, children, className = "",
+}: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-5 py-3 text-sm font-bold text-ink shadow-sm transition-all duration-150
+        hover:bg-mist hover:border-slate-300 hover:-translate-y-px hover:shadow
+        active:scale-[.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+        ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Danger button — red tint */
+function BtnDanger({
+  onClick, disabled, children, className = "",
+}: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-bold text-red-600 transition-all duration-150
+        hover:bg-red-100 hover:border-red-300 hover:text-red-700 hover:-translate-y-px hover:shadow-sm
+        active:scale-[.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+        ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Subtle utility button — slate tint */
+function BtnSubtle({
+  onClick, disabled, children, className = "",
+}: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-500 transition-all duration-150
+        hover:bg-slate-200 hover:text-slate-800 hover:-translate-y-px
+        active:scale-[.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+        ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Card wrapper */
+function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return (
+    <div className={`rounded-2xl border border-border bg-white shadow-card ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+/** Input field */
+function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className={`w-full rounded-xl border border-border bg-mist px-4 py-3 text-sm font-sans text-ink outline-none placeholder:text-slate-muted
+        transition-all duration-150 focus:border-emerald focus:bg-white focus:ring-2 focus:ring-emerald/10
+        ${className}`}
+    />
+  );
+}
+
+/** Badge */
+function Badge({ children, variant = "slate", className = "" }: {
+  children: ReactNode;
+  variant?: "green" | "blue" | "amber" | "slate" | "red";
+  className?: string;
+}) {
+  const variants = {
+    green: "bg-emerald-light text-emerald-text",
+    blue: "bg-blue-100 text-blue-900",
+    amber: "bg-amber-100 text-amber-900",
+    slate: "bg-slate-100 text-slate-600",
+    red: "bg-red-100 text-red-800",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[.7rem] font-bold tracking-wide ${variants[variant]} ${className}`}>
+      {children}
+    </span>
+  );
+}
+
+/** Animated live dot */
+function LiveDot() {
+  return <span className="inline-block h-2 w-2 rounded-full bg-emerald animate-pulse-dot" />;
+}
+
+/* ─── App shell ─────────────────────────────────── */
 function App() {
   const query = new URLSearchParams(window.location.search);
   const [route, setRoute] = useState(query.has("join") ? "patient" : query.has("doctor") ? "doctor" : "home");
-  const [doctorAuthenticated, setDoctorAuthenticated] = useState(() => Boolean(sessionStorage.getItem("queuecare-doctor-token")));
+  const [doctorAuthenticated, setDoctorAuthenticated] = useState(() =>
+    Boolean(sessionStorage.getItem("queuecare-doctor-token"))
+  );
   const state = useQueue();
 
   const navigate = (next: string) => {
@@ -55,20 +195,30 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#f5f8fc", color: "#0d1f35" }}>
+    <div className="min-h-screen bg-mist text-ink font-sans">
       <Header route={route} navigate={navigate} />
-      <div className="fade-in">
+      <div className="animate-fade-in">
         {route === "home" && <Home navigate={navigate} state={state} />}
         {route === "patient" && <PatientJoin state={state} navigate={navigate} />}
-        {route === "doctor" && (doctorAuthenticated
-          ? <DoctorDashboard state={state} navigate={navigate} onLogout={() => { sessionStorage.removeItem("queuecare-doctor-token"); setDoctorAuthenticated(false); }} />
-          : <DoctorAuth onSuccess={() => setDoctorAuthenticated(true)} />
+        {route === "doctor" && (
+          doctorAuthenticated
+            ? <DoctorDashboard
+                state={state}
+                navigate={navigate}
+                onLogout={() => {
+                  sessionStorage.removeItem("queuecare-doctor-token");
+                  setDoctorAuthenticated(false);
+                }}
+              />
+            : <DoctorAuth onSuccess={() => setDoctorAuthenticated(true)} />
         )}
       </div>
-      <footer style={{ borderTop: "1px solid #e4eaf2" }} className="mt-12">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 text-xs font-medium" style={{ color: "#94a3b8" }}>
+      <footer className="mt-12 border-t border-border">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 text-xs font-medium text-slate-muted">
           <span>QueueCare · receptionist-free waiting</span>
-          <span className="flex items-center gap-1.5"><ShieldCheck size={13} style={{ color: "#10b981" }} /> Private queue session</span>
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck size={13} className="text-emerald" /> Private queue session
+          </span>
         </div>
       </footer>
     </div>
@@ -78,31 +228,30 @@ function App() {
 /* ─── Header ────────────────────────────────────── */
 function Header({ route, navigate }: { route: string; navigate: (route: string) => void }) {
   return (
-    <header style={{ backgroundColor: "#fff", borderBottom: "1px solid #e4eaf2" }}>
+    <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <button onClick={() => navigate("home")} className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-xl" style={{ backgroundColor: "#0d1f35", color: "#10b981" }}>
+        <button onClick={() => navigate("home")} className="flex items-center gap-3 transition hover:opacity-80">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-ink text-emerald-glow">
             <HeartPulse size={18} />
           </span>
           <span>
-            <span className="block text-sm font-800 font-extrabold" style={{ color: "#0d1f35" }}>QueueCare</span>
-            <span className="block text-[11px]" style={{ color: "#94a3b8" }}>virtual waiting room</span>
+            <span className="block text-sm font-extrabold text-ink">QueueCare</span>
+            <span className="block text-[11px] text-slate-muted">virtual waiting room</span>
           </span>
         </button>
 
         <div className="hidden items-center gap-2 sm:flex">
-          <span className="dot-live" />
-          <span className="text-xs font-semibold" style={{ color: "#64748b" }}>Live queue</span>
+          <LiveDot />
+          <span className="text-xs font-semibold text-slate-soft">Live queue</span>
         </div>
 
-        <button
+        <BtnGhost
           onClick={() => navigate(route === "doctor" ? "home" : "doctor")}
-          className="btn-ghost"
-          style={{ padding: ".45rem 1rem", fontSize: ".8rem" }}
+          className="!px-4 !py-2 !text-xs"
         >
-          <Stethoscope size={15} />
+          <Stethoscope size={14} />
           {route === "doctor" ? "Patient view" : "Doctor dashboard"}
-        </button>
+        </BtnGhost>
       </div>
     </header>
   );
@@ -115,31 +264,31 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
       {/* Hero */}
       <section className="mx-auto grid max-w-7xl gap-14 px-6 pb-20 pt-14 lg:grid-cols-2 lg:items-center lg:pt-24">
         <div>
-          <div className="badge badge-green mb-6">
+          <Badge variant="green" className="mb-6">
             <Sparkles size={12} /> Less waiting. More care.
-          </div>
-          <h1 className="max-w-xl text-5xl font-black leading-[1.06] tracking-[-0.04em] sm:text-6xl" style={{ color: "#0d1f35" }}>
+          </Badge>
+          <h1 className="max-w-xl text-5xl font-black leading-[1.06] tracking-tight text-ink sm:text-6xl">
             Your place in line,{" "}
-            <span style={{ color: "#10b981" }}>without the line.</span>
+            <span className="text-emerald">without the line.</span>
           </h1>
-          <p className="mt-5 max-w-lg text-base leading-7" style={{ color: "#64748b" }}>
+          <p className="mt-5 max-w-lg text-base leading-7 text-slate-soft">
             Scan the clinic QR, get your token, and wait comfortably nearby.
             We'll keep you updated on WhatsApp as your turn gets closer.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <button onClick={() => navigate("patient")} className="btn-primary">
+            <BtnPrimary onClick={() => navigate("patient")}>
               <QrCode size={17} /> Join the queue <ArrowRight size={15} />
-            </button>
-            <button onClick={() => navigate("doctor")} className="btn-ghost">
+            </BtnPrimary>
+            <BtnGhost onClick={() => navigate("doctor")}>
               <Stethoscope size={16} /> Doctor view
-            </button>
+            </BtnGhost>
           </div>
 
-          <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold" style={{ color: "#94a3b8" }}>
-            <span className="flex items-center gap-1.5"><ShieldCheck size={13} style={{ color: "#10b981" }} /> No app download</span>
-            <span className="flex items-center gap-1.5"><MessageCircle size={13} style={{ color: "#10b981" }} /> WhatsApp updates</span>
-            <span className="flex items-center gap-1.5"><MapPin size={13} style={{ color: "#10b981" }} /> Join near clinic</span>
+          <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-muted">
+            <span className="flex items-center gap-1.5"><ShieldCheck size={13} className="text-emerald" /> No app download</span>
+            <span className="flex items-center gap-1.5"><MessageCircle size={13} className="text-emerald" /> WhatsApp updates</span>
+            <span className="flex items-center gap-1.5"><MapPin size={13} className="text-emerald" /> Join near clinic</span>
           </div>
         </div>
 
@@ -147,7 +296,7 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
       </section>
 
       {/* Feature strip */}
-      <section style={{ backgroundColor: "#fff", borderTop: "1px solid #e4eaf2", borderBottom: "1px solid #e4eaf2" }}>
+      <section className="border-y border-border bg-white">
         <div className="mx-auto grid max-w-7xl gap-5 px-6 py-14 sm:grid-cols-3">
           <Feature icon={<QrCode size={20} />} title="One quick scan" text="The clinic QR stays on the wall. Scan it when you arrive." />
           <Feature icon={<Bell size={20} />} title="Stay in the loop" text="Get alerts at 10, 5, 3, 1 people ahead, and when called." />
@@ -161,30 +310,32 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
 function QueuePreview({ state }: { state: QueueState }) {
   const waiting = state.entries.filter(e => e.status === "waiting").length;
   return (
-    <div className="slide-up mx-auto w-full max-w-md">
-      <div className="rounded-2xl p-6 sm:p-8" style={{ backgroundColor: "#0d1f35", color: "#fff" }}>
-        <div className="flex items-center justify-between pb-5" style={{ borderBottom: "1px solid rgba(255,255,255,.08)" }}>
+    <div className="animate-slide-up mx-auto w-full max-w-md">
+      <div className="rounded-2xl bg-ink p-6 text-white sm:p-8">
+        <div className="flex items-center justify-between border-b border-white/10 pb-5">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[.18em]" style={{ color: "#10b981" }}>Aster Lane Clinic</p>
-            <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,.5)" }}>Evening queue · open now</p>
+            <p className="text-[11px] font-bold uppercase tracking-[.18em] text-emerald">Aster Lane Clinic</p>
+            <p className="mt-1 text-sm text-white/50">Evening queue · open now</p>
           </div>
-          <span className="badge" style={{ background: "rgba(16,185,129,.15)", color: "#34d399", fontSize: ".65rem" }}>● LIVE</span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald/15 px-2.5 py-1 text-[.65rem] font-bold text-emerald-glow">
+            ● LIVE
+          </span>
         </div>
 
         <div className="py-8 text-center">
-          <p className="text-xs font-bold uppercase tracking-[.18em]" style={{ color: "rgba(255,255,255,.35)" }}>Now serving</p>
-          <p className="mt-2 text-8xl font-black tracking-[-0.07em]">{currentToken(state)?.tokenNumber ?? "—"}</p>
-          <p className="mt-3 text-sm" style={{ color: "rgba(255,255,255,.45)" }}>{waiting} people waiting</p>
+          <p className="text-xs font-bold uppercase tracking-[.18em] text-white/35">Now serving</p>
+          <p className="mt-2 text-8xl font-black tracking-tight">{currentToken(state)?.tokenNumber ?? "—"}</p>
+          <p className="mt-3 text-sm text-white/45">{waiting} people waiting</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl p-4" style={{ backgroundColor: "rgba(255,255,255,.06)" }}>
-            <p className="text-[11px] font-semibold" style={{ color: "rgba(255,255,255,.35)" }}>Next update</p>
+          <div className="rounded-xl bg-white/[.06] p-4">
+            <p className="text-[11px] font-semibold text-white/35">Next update</p>
             <p className="mt-1 text-sm font-bold">WhatsApp</p>
           </div>
-          <div className="rounded-xl p-4" style={{ backgroundColor: "rgba(16,185,129,.12)" }}>
-            <p className="text-[11px] font-semibold" style={{ color: "rgba(52,211,153,.6)" }}>Session</p>
-            <p className="mt-1 text-sm font-bold" style={{ color: "#34d399" }}>Until doctor ends</p>
+          <div className="rounded-xl bg-emerald/12 p-4">
+            <p className="text-[11px] font-semibold text-emerald-glow/60">Session</p>
+            <p className="mt-1 text-sm font-bold text-emerald-glow">Until doctor ends</p>
           </div>
         </div>
       </div>
@@ -194,13 +345,13 @@ function QueuePreview({ state }: { state: QueueState }) {
 
 function Feature({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
-    <div className="card p-6">
-      <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl" style={{ backgroundColor: "#f0fdf4", color: "#10b981" }}>
+    <Card className="p-6">
+      <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-emerald-xlight text-emerald">
         {icon}
       </div>
-      <h3 className="font-bold" style={{ color: "#0d1f35" }}>{title}</h3>
-      <p className="mt-2 text-sm leading-6" style={{ color: "#64748b" }}>{text}</p>
-    </div>
+      <h3 className="font-bold text-ink">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-soft">{text}</p>
+    </Card>
   );
 }
 
@@ -229,16 +380,19 @@ function PatientJoin({ state, navigate }: { state: QueueState; navigate: (route:
 
         {/* Left info */}
         <div className="pt-2">
-          <button onClick={() => navigate("home")} className="mb-8 flex items-center gap-2 text-sm font-semibold" style={{ color: "#94a3b8" }}>
+          <button
+            onClick={() => navigate("home")}
+            className="mb-8 flex items-center gap-2 text-sm font-semibold text-slate-muted transition hover:text-ink"
+          >
             <ArrowLeft size={15} /> Back to home
           </button>
-          <div className="badge badge-green mb-5">
+          <Badge variant="green" className="mb-5">
             <MapPin size={12} /> Aster Lane Clinic · Session open
-          </div>
-          <h1 className="text-4xl font-black tracking-[-0.04em] sm:text-5xl" style={{ color: "#0d1f35" }}>
-            Join the queue<br /><span style={{ color: "#10b981" }}>from here.</span>
+          </Badge>
+          <h1 className="text-4xl font-black tracking-tight text-ink sm:text-5xl">
+            Join the queue<br /><span className="text-emerald">from here.</span>
           </h1>
-          <p className="mt-5 max-w-md text-base leading-7" style={{ color: "#64748b" }}>
+          <p className="mt-5 max-w-md text-base leading-7 text-slate-soft">
             You're joining through the clinic QR. Your place is based on the real-time order you enter.
           </p>
           <div className="mt-8 space-y-3">
@@ -249,89 +403,90 @@ function PatientJoin({ state, navigate }: { state: QueueState; navigate: (route:
         </div>
 
         {/* Form card */}
-        <div className="card p-6 sm:p-8">
+        <Card className="p-6 sm:p-8">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.15em]" style={{ color: "#94a3b8" }}>New queue entry</p>
-              <h2 className="mt-2 text-xl font-black" style={{ color: "#0d1f35" }}>Who are you registering?</h2>
+              <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">New queue entry</p>
+              <h2 className="mt-2 text-xl font-black text-ink">Who are you registering?</h2>
             </div>
-            <div className="grid h-10 w-10 place-items-center rounded-xl" style={{ backgroundColor: "#f0fdf4", color: "#10b981" }}>
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-xlight text-emerald">
               <Users size={19} />
             </div>
           </div>
 
           {/* Toggle */}
-          <div className="grid grid-cols-2 gap-1 rounded-xl p-1 mb-6" style={{ backgroundColor: "#f5f8fc" }}>
+          <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-mist p-1">
             <button
               onClick={() => setAssisted(false)}
-              className="rounded-lg py-2.5 text-sm font-bold transition"
-              style={!assisted ? { backgroundColor: "#fff", color: "#0d1f35", boxShadow: "0 1px 4px rgba(13,31,53,.1)" } : { color: "#94a3b8" }}
-            >Myself</button>
+              className={`rounded-lg py-2.5 text-sm font-bold transition-all ${
+                !assisted ? "bg-white text-ink shadow-sm" : "text-slate-muted hover:text-ink"
+              }`}
+            >
+              Myself
+            </button>
             <button
               onClick={() => setAssisted(true)}
-              className="rounded-lg py-2.5 text-sm font-bold transition"
-              style={assisted ? { backgroundColor: "#fff", color: "#0d1f35", boxShadow: "0 1px 4px rgba(13,31,53,.1)" } : { color: "#94a3b8" }}
-            >Someone else</button>
+              className={`rounded-lg py-2.5 text-sm font-bold transition-all ${
+                assisted ? "bg-white text-ink shadow-sm" : "text-slate-muted hover:text-ink"
+              }`}
+            >
+              Someone else
+            </button>
           </div>
 
           {assisted && (
-            <div className="mb-5 flex gap-3 rounded-xl p-4 text-sm leading-5" style={{ backgroundColor: "#eff6ff", color: "#1e40af" }}>
+            <div className="mb-5 flex gap-3 rounded-xl bg-blue-50 p-4 text-sm leading-5 text-blue-800">
               <Info size={17} className="mt-0.5 shrink-0" />
               <span>Registering an elder? Use your own phone. WhatsApp updates will come to you.</span>
             </div>
           )}
 
-          <label className="block text-sm font-bold mb-1" style={{ color: "#0d1f35" }}>
-            Patient name
-          </label>
-          <input
+          <label className="mb-1 block text-sm font-bold text-ink">Patient name</label>
+          <Input
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder={assisted ? "Enter elder's name" : "Enter your name"}
-            className="input mb-5"
+            className="mb-5"
           />
 
-          <label className="block text-sm font-bold mb-1" style={{ color: "#0d1f35" }}>
-            WhatsApp number
-          </label>
+          <label className="mb-1 block text-sm font-bold text-ink">WhatsApp number</label>
           <div className="relative mb-5">
-            <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#94a3b8" }} />
-            <input
+            <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-muted" />
+            <Input
               value={phone}
               onChange={e => setPhone(e.target.value)}
               placeholder="+91 98765 43210"
               type="tel"
-              className="input"
-              style={{ paddingLeft: "2.5rem" }}
+              className="pl-9"
             />
           </div>
 
-          <label className="flex cursor-pointer items-start gap-2.5 text-xs leading-5 mb-6" style={{ color: "#64748b" }}>
+          <label className="mb-6 flex cursor-pointer items-start gap-2.5 text-xs leading-5 text-slate-soft">
             <input
               checked={optedIn}
               onChange={e => setOptedIn(e.target.checked)}
               type="checkbox"
-              className="mt-0.5 h-4 w-4 accent-emerald-500"
+              className="mt-0.5 h-4 w-4 accent-emerald"
             />
             I agree to receive queue updates on WhatsApp for this clinic session.
           </label>
 
           {error && (
-            <div className="mb-5 rounded-xl px-4 py-3 text-sm font-semibold" style={{ backgroundColor: "#fef2f2", color: "#dc2626" }}>
+            <div className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
               {error}
             </div>
           )}
 
-          <button onClick={join} disabled={!optedIn || loading} className="btn-primary w-full">
-            <Zap size={16} style={{ color: "#34d399" }} />
+          <BtnPrimary onClick={join} disabled={!optedIn || loading} className="w-full">
+            <Zap size={16} className="text-emerald-glow" />
             {loading ? "Joining…" : "Get my token"}
             <ArrowRight size={15} />
-          </button>
+          </BtnPrimary>
 
-          <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] font-semibold" style={{ color: "#94a3b8" }}>
-            <ShieldCheck size={12} style={{ color: "#10b981" }} /> Your token is only valid for today's session
+          <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-slate-muted">
+            <ShieldCheck size={12} className="text-emerald" /> Your token is only valid for today's session
           </p>
-        </div>
+        </Card>
       </div>
     </main>
   );
@@ -340,8 +495,10 @@ function PatientJoin({ state, navigate }: { state: QueueState; navigate: (route:
 function Step({ n, text }: { n: string; text: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-[10px] font-black" style={{ backgroundColor: "#fff", color: "#10b981", boxShadow: "0 1px 4px rgba(13,31,53,.1)" }}>{n}</span>
-      <span className="text-sm" style={{ color: "#64748b" }}>{text}</span>
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white text-[10px] font-black text-emerald shadow-sm">
+        {n}
+      </span>
+      <span className="text-sm text-slate-soft">{text}</span>
     </div>
   );
 }
@@ -354,62 +511,62 @@ function PatientToken({ entry, state, navigate }: { entry: QueueEntry; state: Qu
   const skipped = liveEntry.status === "skipped";
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 sm:py-16 fade-in">
-      <div className="text-center mb-10">
-        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl" style={{ backgroundColor: "#f0fdf4", color: "#10b981" }}>
+    <main className="mx-auto max-w-3xl px-6 py-10 sm:py-16 animate-fade-in">
+      <div className="mb-10 text-center">
+        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-emerald-xlight text-emerald">
           <Check size={26} />
         </div>
-        <p className="text-xs font-bold uppercase tracking-[.18em]" style={{ color: "#10b981" }}>
+        <p className="text-xs font-bold uppercase tracking-[.18em] text-emerald">
           {called ? "Your turn is ready" : skipped ? "Token skipped" : "You're in the queue"}
         </p>
-        <h1 className="mt-3 text-5xl font-black tracking-[-0.05em] sm:text-7xl" style={{ color: "#0d1f35" }}>
-          Token <span style={{ color: "#10b981" }}>{liveEntry.tokenNumber}</span>
+        <h1 className="mt-3 text-5xl font-black tracking-tight text-ink sm:text-7xl">
+          Token <span className="text-emerald">{liveEntry.tokenNumber}</span>
         </h1>
-        <p className="mt-3 text-sm" style={{ color: "#64748b" }}>{liveEntry.patientName} · Aster Lane Clinic</p>
+        <p className="mt-3 text-sm text-slate-soft">{liveEntry.patientName} · Aster Lane Clinic</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3 mb-6">
-        <Stat label="People ahead" value={called ? "Now" : skipped ? "Skipped" : String(ahead ?? 0)} icon={<Users size={18} />} tone="green" />
-        <Stat label="Current token" value={String(currentToken(state)?.tokenNumber ?? "—")} icon={<Activity size={18} />} tone="slate" />
-        <Stat label="Updates" value="WhatsApp" icon={<MessageCircle size={18} />} tone="amber" />
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <StatCard label="People ahead" value={called ? "Now" : skipped ? "Skipped" : String(ahead ?? 0)} icon={<Users size={18} />} tone="green" />
+        <StatCard label="Current token" value={String(currentToken(state)?.tokenNumber ?? "—")} icon={<Activity size={18} />} tone="slate" />
+        <StatCard label="Updates" value="WhatsApp" icon={<MessageCircle size={18} />} tone="amber" />
       </div>
 
-      <div className="card p-6 sm:p-8">
-        <div className="flex items-center justify-between mb-6">
+      <Card className="p-6 sm:p-8">
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="font-black" style={{ color: "#0d1f35" }}>Live queue status</h2>
-            <p className="mt-1 text-sm" style={{ color: "#94a3b8" }}>Updates automatically in real time.</p>
+            <h2 className="font-black text-ink">Live queue status</h2>
+            <p className="mt-1 text-sm text-slate-muted">Updates automatically in real time.</p>
           </div>
-          <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: "#10b981" }}>
-            <span className="dot-live" /> Live
+          <span className="flex items-center gap-1.5 text-xs font-bold text-emerald">
+            <LiveDot /> Live
           </span>
         </div>
 
-        <div className="h-2.5 overflow-hidden rounded-full" style={{ backgroundColor: "#e4eaf2" }}>
+        <div className="h-2.5 overflow-hidden rounded-full bg-border">
           <div
-            className="h-full rounded-full"
+            className="h-full rounded-full bg-emerald transition-[width] duration-700"
             style={{
-              width: called ? "100%" : `${Math.max(8, 100 - ((ahead ?? 0) / Math.max(1, state.entries.length)) * 100)}%`,
-              backgroundColor: "#10b981",
-              transition: "width .7s cubic-bezier(.4,0,.2,1)"
+              width: called
+                ? "100%"
+                : `${Math.max(8, 100 - ((ahead ?? 0) / Math.max(1, state.entries.length)) * 100)}%`,
             }}
           />
         </div>
-        <div className="mt-2 flex justify-between text-xs font-semibold" style={{ color: "#94a3b8" }}>
+        <div className="mt-2 flex justify-between text-xs font-semibold text-slate-muted">
           <span>Joined</span>
           <span>{called ? "Called!" : ahead === 1 ? "You're next" : `${ahead ?? 0} ahead`}</span>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-2">
-          <span className="badge badge-green"><MessageCircle size={12} /> WhatsApp alerts active</span>
-          <span className="badge badge-slate"><Clock3 size={12} /> Session open</span>
+          <Badge variant="green"><MessageCircle size={12} /> WhatsApp alerts active</Badge>
+          <Badge variant="slate"><Clock3 size={12} /> Session open</Badge>
         </div>
-      </div>
+      </Card>
 
       <div className="mt-6 text-center">
-        <button onClick={() => navigate("home")} className="btn-ghost" style={{ fontSize: ".8rem", padding: ".5rem 1.1rem" }}>
+        <BtnGhost onClick={() => navigate("home")} className="!px-4 !py-2 !text-xs">
           <House size={15} /> Return home
-        </button>
+        </BtnGhost>
       </div>
     </main>
   );
@@ -428,10 +585,16 @@ function DoctorAuth({ onSuccess }: { onSuccess: () => void }) {
   const requestCode = async () => {
     setLoading(true); setError("");
     try {
-      const res = await fetch("/api/auth/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone }) });
+      const res = await fetch("/api/auth/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setChallengeId(data.challengeId); setMaskedPhone(data.maskedPhone); setDemoCode(data.demoCode ?? "");
+      setChallengeId(data.challengeId);
+      setMaskedPhone(data.maskedPhone);
+      setDemoCode(data.demoCode ?? "");
     } catch (err) { setError(err instanceof Error ? err.message : "Could not send OTP."); }
     finally { setLoading(false); }
   };
@@ -439,95 +602,114 @@ function DoctorAuth({ onSuccess }: { onSuccess: () => void }) {
   const verifyCode = async () => {
     setLoading(true); setError("");
     try {
-      const res = await fetch("/api/auth/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ challengeId, code }) });
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ challengeId, code }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      sessionStorage.setItem("queuecare-doctor-token", data.token); onSuccess();
+      sessionStorage.setItem("queuecare-doctor-token", data.token);
+      onSuccess();
     } catch (err) { setError(err instanceof Error ? err.message : "Could not verify OTP."); }
     finally { setLoading(false); }
   };
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-140px)] max-w-4xl items-center justify-center px-6 py-12 fade-in">
-      <div className="w-full overflow-hidden rounded-2xl" style={{ border: "1px solid #e4eaf2", boxShadow: "0 1px 3px rgba(13,31,53,.06), 0 6px 24px rgba(13,31,53,.07)" }}>
+    <main className="mx-auto flex min-h-[calc(100vh-140px)] max-w-4xl items-center justify-center px-6 py-12 animate-fade-in">
+      <div className="w-full overflow-hidden rounded-2xl border border-border shadow-card">
         <div className="grid lg:grid-cols-[.85fr_1.15fr]">
 
           {/* Left panel */}
-          <div className="hidden p-10 lg:block" style={{ backgroundColor: "#0d1f35", color: "#fff" }}>
-            <div className="grid h-11 w-11 place-items-center rounded-xl" style={{ backgroundColor: "#10b981", color: "#fff" }}>
+          <div className="hidden bg-ink p-10 text-white lg:block">
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald">
               <Stethoscope size={22} />
             </div>
-            <p className="mt-10 text-[11px] font-bold uppercase tracking-[.2em]" style={{ color: "#34d399" }}>Doctor portal</p>
-            <h2 className="mt-3 text-3xl font-black leading-tight tracking-[-0.05em]">Your clinic queue,<br />under control.</h2>
-            <p className="mt-4 text-sm leading-6" style={{ color: "rgba(255,255,255,.5)" }}>
+            <p className="mt-10 text-[11px] font-bold uppercase tracking-[.2em] text-emerald-glow">Doctor portal</p>
+            <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight">
+              Your clinic queue,<br />under control.
+            </h2>
+            <p className="mt-4 text-sm leading-6 text-white/50">
               Sign in securely to call the next patient, recall a missed turn, and keep the waiting room moving.
             </p>
-            <div className="mt-10 space-y-3 text-sm" style={{ color: "rgba(255,255,255,.6)" }}>
-              <span className="flex items-center gap-3"><ShieldCheck size={16} style={{ color: "#34d399" }} /> OTP-protected access</span>
-              <span className="flex items-center gap-3"><MessageCircle size={16} style={{ color: "#34d399" }} /> Live patient updates</span>
-              <span className="flex items-center gap-3"><Activity size={16} style={{ color: "#34d399" }} /> One-tap queue control</span>
+            <div className="mt-10 space-y-3 text-sm text-white/60">
+              <span className="flex items-center gap-3"><ShieldCheck size={16} className="text-emerald-glow" /> OTP-protected access</span>
+              <span className="flex items-center gap-3"><MessageCircle size={16} className="text-emerald-glow" /> Live patient updates</span>
+              <span className="flex items-center gap-3"><Activity size={16} className="text-emerald-glow" /> One-tap queue control</span>
             </div>
           </div>
 
           {/* Right form */}
-          <div className="p-7 sm:p-10" style={{ backgroundColor: "#fff" }}>
-            <div className="flex items-center gap-2 text-xs font-bold mb-6" style={{ color: "#10b981" }}>
+          <div className="bg-white p-7 sm:p-10">
+            <div className="mb-6 flex items-center gap-2 text-xs font-bold text-emerald">
               <ShieldCheck size={14} /> Secure doctor sign in
             </div>
 
             {!challengeId ? (
               <>
-                <h2 className="text-2xl font-black tracking-[-0.04em]" style={{ color: "#0d1f35" }}>Welcome back</h2>
-                <p className="mt-2 text-sm leading-6 mb-7" style={{ color: "#64748b" }}>
+                <h2 className="text-2xl font-black tracking-tight text-ink">Welcome back</h2>
+                <p className="mb-7 mt-2 text-sm leading-6 text-slate-soft">
                   Enter the registered doctor mobile number to receive a one-time password.
                 </p>
-                <label className="block text-sm font-bold mb-1" style={{ color: "#0d1f35" }}>Mobile number</label>
+                <label className="mb-1 block text-sm font-bold text-ink">Mobile number</label>
                 <div className="relative mb-6">
-                  <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#94a3b8" }} />
-                  <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91 98765 43210" type="tel"
-                    className="input" style={{ paddingLeft: "2.5rem" }} />
+                  <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-muted" />
+                  <Input
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    type="tel"
+                    className="pl-9"
+                  />
                 </div>
-                <button onClick={requestCode} disabled={loading} className="btn-primary w-full">
+                <BtnPrimary onClick={requestCode} disabled={loading} className="w-full">
                   {loading ? "Sending…" : "Continue"} <ArrowRight size={15} />
-                </button>
+                </BtnPrimary>
               </>
             ) : (
               <>
-                <button onClick={() => setChallengeId("")} className="text-xs font-bold mb-6 flex items-center gap-1.5" style={{ color: "#94a3b8" }}>
+                <button
+                  onClick={() => setChallengeId("")}
+                  className="mb-6 flex items-center gap-1.5 text-xs font-bold text-slate-muted transition hover:text-ink"
+                >
                   <ArrowLeft size={13} /> Change number
                 </button>
-                <h2 className="text-2xl font-black tracking-[-0.04em]" style={{ color: "#0d1f35" }}>Verify your number</h2>
-                <p className="mt-2 text-sm leading-6 mb-7" style={{ color: "#64748b" }}>
-                  We sent a 6-digit OTP to <strong style={{ color: "#0d1f35" }}>{maskedPhone}</strong>.
+                <h2 className="text-2xl font-black tracking-tight text-ink">Verify your number</h2>
+                <p className="mb-7 mt-2 text-sm leading-6 text-slate-soft">
+                  We sent a 6-digit OTP to <strong className="text-ink">{maskedPhone}</strong>.
                 </p>
-                <input
+                <Input
                   value={code}
                   onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   placeholder="Enter 6-digit OTP"
                   inputMode="numeric"
-                  className="input mb-4 text-center text-2xl font-black tracking-[.5em]"
+                  className="mb-4 text-center text-2xl font-black tracking-[.5em]"
                 />
                 {demoCode && (
-                  <div className="mb-5 rounded-xl px-4 py-3 text-xs font-semibold leading-5" style={{ backgroundColor: "#fefce8", color: "#92400e" }}>
-                    <Info size={13} className="mr-1 inline" /> Local demo OTP: <strong className="tracking-widest">{demoCode}</strong>
+                  <div className="mb-5 rounded-xl bg-amber-50 px-4 py-3 text-xs font-semibold leading-5 text-amber-900">
+                    <Info size={13} className="mr-1 inline" /> Local demo OTP:{" "}
+                    <strong className="tracking-widest">{demoCode}</strong>
                   </div>
                 )}
-                <button onClick={verifyCode} disabled={loading || code.length !== 6} className="btn-primary w-full mb-4">
+                <BtnPrimary onClick={verifyCode} disabled={loading || code.length !== 6} className="mb-4 w-full">
                   {loading ? "Verifying…" : "Verify & open dashboard"} <ArrowRight size={15} />
-                </button>
-                <button onClick={requestCode} className="w-full text-center text-xs font-bold" style={{ color: "#94a3b8" }}>
+                </BtnPrimary>
+                <button
+                  onClick={requestCode}
+                  className="w-full text-center text-xs font-bold text-slate-muted transition hover:text-ink"
+                >
                   Resend code
                 </button>
               </>
             )}
 
             {error && (
-              <div className="mt-5 rounded-xl px-4 py-3 text-sm font-semibold" style={{ backgroundColor: "#fef2f2", color: "#dc2626" }}>
+              <div className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
                 {error}
               </div>
             )}
 
-            <p className="mt-8 text-center text-[11px] leading-5" style={{ color: "#94a3b8" }}>
+            <p className="mt-8 text-center text-[11px] leading-5 text-slate-muted">
               Only the clinic doctor should access queue controls.
             </p>
           </div>
@@ -538,31 +720,36 @@ function DoctorAuth({ onSuccess }: { onSuccess: () => void }) {
 }
 
 /* ─── Stat card ─────────────────────────────────── */
-function Stat({ label, value, icon, tone }: { label: string; value: string; icon: ReactNode; tone: "green" | "blue" | "amber" | "slate" }) {
-  const colors = {
-    green: { bg: "#f0fdf4", icon: "#10b981" },
-    blue:  { bg: "#eff6ff", icon: "#3b82f6" },
-    amber: { bg: "#fffbeb", icon: "#f59e0b" },
-    slate: { bg: "#f8fafc", icon: "#64748b" },
+function StatCard({ label, value, icon, tone }: {
+  label: string; value: string; icon: ReactNode;
+  tone: "green" | "blue" | "amber" | "slate";
+}) {
+  const toneClasses = {
+    green: { wrap: "bg-emerald-xlight text-emerald" },
+    blue:  { wrap: "bg-blue-50 text-blue-500" },
+    amber: { wrap: "bg-amber-50 text-amber-500" },
+    slate: { wrap: "bg-slate-100 text-slate-soft" },
   };
   return (
-    <div className="card p-5">
-      <div className="mb-4 grid h-9 w-9 place-items-center rounded-xl" style={{ backgroundColor: colors[tone].bg, color: colors[tone].icon }}>
+    <Card className="p-5">
+      <div className={`mb-4 grid h-9 w-9 place-items-center rounded-xl ${toneClasses[tone].wrap}`}>
         {icon}
       </div>
-      <p className="text-xs font-semibold" style={{ color: "#94a3b8" }}>{label}</p>
-      <p className="mt-1 text-xl font-black" style={{ color: "#0d1f35" }}>{value}</p>
-    </div>
+      <p className="text-xs font-semibold text-slate-muted">{label}</p>
+      <p className="mt-1 text-xl font-black text-ink">{value}</p>
+    </Card>
   );
 }
 
 /* ─── Doctor Dashboard ──────────────────────────── */
-function DoctorDashboard({ state, navigate, onLogout }: { state: QueueState; navigate: (route: string) => void; onLogout: () => void }) {
+function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
+  state: QueueState; navigate: (route: string) => void; onLogout: () => void;
+}) {
   const [qr, setQr] = useState("");
   const [toast, setToast] = useState("");
-  const waiting  = state.entries.filter(e => e.status === "waiting");
-  const skipped  = state.entries.filter(e => e.status === "skipped");
-  const called   = currentToken(state);
+  const waiting = state.entries.filter(e => e.status === "waiting");
+  const skipped = state.entries.filter(e => e.status === "skipped");
+  const called  = currentToken(state);
   const [joinUrl, setJoinUrl] = useState(`${window.location.origin}/?join=clinic-demo`);
 
   useEffect(() => {
@@ -577,14 +764,17 @@ function DoctorDashboard({ state, navigate, onLogout }: { state: QueueState; nav
 
   const notify = (msg: string) => { setToast(msg); window.setTimeout(() => setToast(""), 3000); };
   const safe = async (action: () => Promise<void> | void, msg: string) => {
-    try { await action(); notify(msg); } catch (e) { notify(e instanceof Error ? e.message : "Something went wrong"); }
+    try { await action(); notify(msg); }
+    catch (e) { notify(e instanceof Error ? e.message : "Something went wrong"); }
   };
 
   const callCurrent = () => {
     if (!called) return;
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(`Token number ${called.tokenNumber}, ${called.patientName}, please proceed to the doctor.`);
+      const u = new SpeechSynthesisUtterance(
+        `Token number ${called.tokenNumber}, ${called.patientName}, please proceed to the doctor.`
+      );
       u.rate = 0.9;
       window.speechSynthesis.speak(u);
     }
@@ -594,41 +784,43 @@ function DoctorDashboard({ state, navigate, onLogout }: { state: QueueState; nav
   const copy = () => { navigator.clipboard?.writeText(joinUrl); notify("Patient join link copied"); };
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-8 fade-in">
+    <main className="mx-auto max-w-7xl px-6 py-8 animate-fade-in">
       {/* Top bar */}
-      <div className="flex items-start justify-between gap-4 mb-8">
+      <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold mb-2" style={{ color: "#10b981" }}>
-            <span className="dot-live" /> SESSION LIVE · 6:00 PM
+          <div className="mb-2 flex items-center gap-2 text-xs font-bold text-emerald">
+            <LiveDot /> SESSION LIVE · 6:00 PM
           </div>
-          <h1 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl" style={{ color: "#0d1f35" }}>Good evening, Doctor.</h1>
-          <p className="mt-1.5 text-sm" style={{ color: "#64748b" }}>Your queue is in your hands. {waiting.length} patients are waiting.</p>
+          <h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">Good evening, Doctor.</h1>
+          <p className="mt-1.5 text-sm text-slate-soft">
+            Your queue is in your hands. {waiting.length} patients are waiting.
+          </p>
         </div>
-        <button onClick={onLogout} className="btn-ghost" style={{ padding: ".45rem 1rem", fontSize: ".8rem" }}>Sign out</button>
+        <BtnGhost onClick={onLogout} className="!px-4 !py-2 !text-xs">Sign out</BtnGhost>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.25fr_.75fr]">
         {/* Left column */}
         <div className="space-y-5">
           {/* Current token hero */}
-          <div className="rounded-2xl p-6 sm:p-8" style={{ backgroundColor: "#0d1f35", color: "#fff" }}>
-            <div className="flex items-start justify-between mb-6">
+          <div className="rounded-2xl bg-ink p-6 text-white sm:p-8">
+            <div className="mb-6 flex items-start justify-between">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[.18em]" style={{ color: "#34d399" }}>Currently serving</p>
+                <p className="text-[11px] font-bold uppercase tracking-[.18em] text-emerald-glow">Currently serving</p>
                 <div className="mt-3 flex items-end gap-4">
-                  <span className="text-8xl font-black leading-none tracking-[-0.08em]">{called?.tokenNumber ?? "—"}</span>
-                  {called && <span className="mb-2 text-sm" style={{ color: "rgba(255,255,255,.55)" }}>{called.patientName}</span>}
+                  <span className="text-8xl font-black leading-none tracking-tight">{called?.tokenNumber ?? "—"}</span>
+                  {called && <span className="mb-2 text-sm text-white/55">{called.patientName}</span>}
                 </div>
               </div>
-              <div className="rounded-xl p-2.5" style={{ backgroundColor: "rgba(255,255,255,.08)", color: "#34d399" }}>
+              <div className="rounded-xl bg-white/[.08] p-2.5 text-emerald-glow">
                 <Activity size={20} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <DashboardMetric label="Waiting"      value={String(waiting.length)} />
-              <DashboardMetric label="Skipped"      value={String(skipped.length)} />
-              <DashboardMetric label="Called today" value={String(state.entries.filter(e => e.status === "completed" || e.status === "called").length)} />
-              <DashboardMetric label="Status"       value={state.acceptingTokens ? "Open" : "Stopped"} />
+              <DashMetric label="Waiting"      value={String(waiting.length)} />
+              <DashMetric label="Skipped"      value={String(skipped.length)} />
+              <DashMetric label="Called today" value={String(state.entries.filter(e => e.status === "completed" || e.status === "called").length)} />
+              <DashMetric label="Status"       value={state.acceptingTokens ? "Open" : "Stopped"} />
             </div>
           </div>
 
@@ -638,8 +830,7 @@ function DoctorDashboard({ state, navigate, onLogout }: { state: QueueState; nav
               icon={<Send size={20} />}
               label="Call current"
               badge="Speaker"
-              color="#3b82f6"
-              bgHover="#eff6ff"
+              accent="blue"
               onClick={callCurrent}
               disabled={!called}
             />
@@ -647,17 +838,15 @@ function DoctorDashboard({ state, navigate, onLogout }: { state: QueueState; nav
               icon={<ChevronRight size={22} />}
               label="Next patient"
               badge="Main"
-              color="#fff"
-              bgColor="#10b981"
-              bgHover="#059669"
+              accent="emerald"
+              primary
               onClick={() => safe(() => queueStore.next(), called ? `Token ${waiting[0]?.tokenNumber ?? "—"} called` : "Next patient called")}
             />
             <ActionBtn
               icon={<SkipForward size={20} />}
               label="Skip current"
               badge="Skip"
-              color="#f59e0b"
-              bgHover="#fffbeb"
+              accent="amber"
               onClick={() => safe(() => queueStore.skip(), "Current token skipped")}
               disabled={!called}
             />
@@ -665,70 +854,85 @@ function DoctorDashboard({ state, navigate, onLogout }: { state: QueueState; nav
               icon={<RefreshCw size={20} />}
               label="Recall skipped"
               badge="Recall"
-              color="#8b5cf6"
-              bgHover="#f5f3ff"
+              accent="purple"
               onClick={() => { const first = skipped[0]; if (first) void safe(() => queueStore.recall(first.id), "Token recalled"); }}
               disabled={skipped.length === 0}
             />
           </div>
 
-          <QueueTable state={state} onRecall={(id) => safe(() => queueStore.recall(id), "Token recalled to priority line")} />
+          <QueueTable state={state} onRecall={id => safe(() => queueStore.recall(id), "Token recalled to priority line")} />
         </div>
 
         {/* Right sidebar */}
         <aside className="space-y-5">
           {/* QR card */}
-          <div className="card p-6">
-            <div className="flex items-start justify-between mb-5">
+          <Card className="p-6">
+            <div className="mb-5 flex items-start justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[.15em]" style={{ color: "#94a3b8" }}>Permanent clinic QR</p>
-                <h2 className="mt-1.5 text-lg font-black" style={{ color: "#0d1f35" }}>Put this on the wall</h2>
+                <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Permanent clinic QR</p>
+                <h2 className="mt-1.5 text-lg font-black text-ink">Put this on the wall</h2>
               </div>
-              <QrCode size={22} style={{ color: "#10b981" }} />
+              <QrCode size={22} className="text-emerald" />
             </div>
-            <div className="mx-auto w-fit rounded-xl p-3" style={{ border: "1px solid #e4eaf2" }}>
+            <div className="mx-auto w-fit rounded-xl border border-border p-3">
               {qr
                 ? <img src={qr} alt="Clinic join QR code" className="h-44 w-44" />
-                : <div className="grid h-44 w-44 place-items-center" style={{ backgroundColor: "#f5f8fc" }}><RefreshCw className="animate-spin" style={{ color: "#c8d6e3" }} /></div>
+                : <div className="grid h-44 w-44 place-items-center bg-mist">
+                    <RefreshCw className="animate-spin text-slate-faint" />
+                  </div>
               }
             </div>
-            <div className="mt-4 rounded-xl p-3.5" style={{ backgroundColor: "#f0fdf4" }}>
-              <p className="flex items-center gap-2 text-xs font-black" style={{ color: "#065f46" }}><Check size={13} /> QR is ready for scanning</p>
-              <p className="mt-1 break-all text-[11px] leading-4" style={{ color: "#059669", opacity: .75 }}>{joinUrl}</p>
+            <div className="mt-4 rounded-xl bg-emerald-xlight p-3.5">
+              <p className="flex items-center gap-2 text-xs font-black text-emerald-text">
+                <Check size={13} /> QR is ready for scanning
+              </p>
+              <p className="mt-1 break-all text-[11px] leading-4 text-emerald-dark/75">{joinUrl}</p>
             </div>
-            <p className="mt-3 text-center text-xs leading-5" style={{ color: "#94a3b8" }}>
+            <p className="mt-3 text-center text-xs leading-5 text-slate-muted">
               Patients scan this same QR every day. It accepts tokens only while the session is open.
             </p>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={copy} className="btn-ghost" style={{ fontSize: ".8rem", padding: ".6rem" }}>
+              <BtnGhost onClick={copy} className="!px-3 !py-2 !text-xs">
                 <Copy size={14} /> Copy link
-              </button>
-              <a href={joinUrl} target="_blank" rel="noreferrer" className="btn-primary" style={{ fontSize: ".8rem", padding: ".6rem", textDecoration: "none" }}>
+              </BtnGhost>
+              <a
+                href={joinUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-ink/20 bg-ink px-3 py-2 text-xs font-bold text-white transition hover:bg-ink-soft"
+              >
                 <ArrowRight size={14} /> Test join
               </a>
             </div>
-          </div>
+          </Card>
 
           {/* Session controls */}
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
+          <Card className="p-6">
+            <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[.15em]" style={{ color: "#94a3b8" }}>Session controls</p>
-                <p className="mt-1.5 font-black" style={{ color: "#0d1f35" }}>{state.acceptingTokens ? "Accepting new tokens" : "No new tokens"}</p>
+                <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Session controls</p>
+                <p className="mt-1.5 font-black text-ink">
+                  {state.acceptingTokens ? "Accepting new tokens" : "No new tokens"}
+                </p>
               </div>
-              <span className={`badge ${state.acceptingTokens ? "badge-green" : "badge-amber"}`}>
+              <Badge variant={state.acceptingTokens ? "green" : "amber"}>
                 {state.status.toUpperCase()}
-              </span>
+              </Badge>
             </div>
-            <button onClick={() => safe(() => queueStore.endSession(), "Session ended")} disabled={state.status !== "open"} className="btn-danger w-full mb-3">
+            <BtnDanger
+              onClick={() => safe(() => queueStore.endSession(), "Session ended")}
+              disabled={state.status !== "open"}
+              className="mb-3 w-full"
+            >
               <X size={15} /> End session
-            </button>
-            <button onClick={() => { queueStore.resetDemo(); notify("Demo queue reset"); }} className="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl transition" style={{ color: "#94a3b8" }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#f5f8fc")}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}>
+            </BtnDanger>
+            <BtnSubtle
+              onClick={() => { queueStore.resetDemo(); notify("Demo queue reset"); }}
+              className="w-full"
+            >
               <RefreshCw size={13} /> Reset demo queue
-            </button>
-          </div>
+            </BtnSubtle>
+          </Card>
 
           <ActivityFeed state={state} />
         </aside>
@@ -736,39 +940,46 @@ function DoctorDashboard({ state, navigate, onLogout }: { state: QueueState; nav
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-2xl" style={{ backgroundColor: "#0d1f35" }}>
-          <Check size={15} style={{ color: "#34d399" }} /> {toast}
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex items-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white shadow-2xl">
+          <Check size={15} className="text-emerald-glow" /> {toast}
         </div>
       )}
     </main>
   );
 }
 
+/* ─── Action button (dashboard) ─────────────────── */
 function ActionBtn({
-  icon, label, badge, color, bgColor, bgHover, onClick, disabled
+  icon, label, badge, accent, primary, onClick, disabled,
 }: {
-  icon: ReactNode; label: string; badge: string; color: string;
-  bgColor?: string; bgHover?: string; onClick: () => void; disabled?: boolean;
+  icon: ReactNode; label: string; badge: string;
+  accent: "blue" | "emerald" | "amber" | "purple";
+  primary?: boolean; onClick: () => void; disabled?: boolean;
 }) {
-  const [hovered, setHovered] = useState(false);
-  const bg = bgColor ?? (hovered && !disabled ? bgHover ?? "#f8fafc" : "#fff");
+  const accentMap = {
+    blue:    { icon: "text-blue-500",   badge: "bg-blue-100 text-blue-700" },
+    emerald: { icon: "text-emerald",     badge: "bg-emerald/20 text-white" },
+    amber:   { icon: "text-amber-500",  badge: "bg-amber-100 text-amber-700" },
+    purple:  { icon: "text-violet-500", badge: "bg-violet-100 text-violet-700" },
+  };
+  const { icon: iconCls, badge: badgeCls } = accentMap[accent];
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="flex min-h-28 flex-col items-start justify-between rounded-2xl p-4 text-left font-black transition disabled:cursor-not-allowed disabled:opacity-40"
-      style={{
-        backgroundColor: bg,
-        border: bgColor ? "none" : "1px solid #e4eaf2",
-        color: bgColor ? color : "#0d1f35",
-        boxShadow: bgColor ? "0 2px 10px rgba(16,185,129,.25)" : "0 1px 3px rgba(13,31,53,.06)",
-      }}
+      className={[
+        "flex min-h-28 flex-col items-start justify-between rounded-2xl p-4 text-left font-black",
+        "transition-all duration-150 active:scale-[.97]",
+        "disabled:cursor-not-allowed disabled:opacity-40",
+        primary
+          ? "bg-emerald border border-emerald-dark text-white shadow-btn-emerald hover:bg-emerald-dark hover:-translate-y-px hover:shadow-btn-emerald-lg"
+          : "bg-white border border-border text-ink shadow-sm hover:bg-mist hover:-translate-y-px hover:shadow",
+      ].join(" ")}
     >
       <span className="flex w-full items-center justify-between">
-        <span style={{ color: bgColor ? color : color }}>{icon}</span>
-        <span className="rounded-full px-2 py-0.5 text-[10px] font-black uppercase" style={{ backgroundColor: bgColor ? "rgba(255,255,255,.2)" : "#f1f5f9", color: bgColor ? "#fff" : "#64748b" }}>
+        <span className={primary ? "text-white" : iconCls}>{icon}</span>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${primary ? "bg-white/20 text-white" : badgeCls}`}>
           {badge}
         </span>
       </span>
@@ -777,87 +988,98 @@ function ActionBtn({
   );
 }
 
-function DashboardMetric({ label, value }: { label: string; value: string }) {
+/* ─── Dashboard metric (inside dark hero) ───────── */
+function DashMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl p-3" style={{ backgroundColor: "rgba(255,255,255,.07)" }}>
-      <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,.35)" }}>{label}</p>
-      <p className="mt-1 text-lg font-black">{value}</p>
+    <div className="rounded-xl bg-white/[.07] p-3">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-white/35">{label}</p>
+      <p className="mt-1 text-lg font-black text-white">{value}</p>
     </div>
   );
 }
 
+/* ─── Queue table ───────────────────────────────── */
 function QueueTable({ state, onRecall }: { state: QueueState; onRecall: (id: string) => void }) {
   const entries = [...state.entries]
     .filter(e => ["waiting", "skipped"].includes(e.status))
     .sort((a, b) => Number(b.priority) - Number(a.priority) || a.tokenNumber - b.tokenNumber);
 
   return (
-    <div className="card p-6">
-      <div className="flex items-center justify-between mb-5">
+    <Card className="p-6">
+      <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[.15em]" style={{ color: "#94a3b8" }}>Up next</p>
-          <h2 className="mt-1.5 text-xl font-black" style={{ color: "#0d1f35" }}>Live patient queue</h2>
+          <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Up next</p>
+          <h2 className="mt-1.5 text-xl font-black text-ink">Live patient queue</h2>
         </div>
-        <span className="badge badge-slate">{entries.length} active</span>
+        <Badge variant="slate">{entries.length} active</Badge>
       </div>
 
-      <div className="divide-y" style={{ borderColor: "#f1f5f9" }}>
+      <div className="divide-y divide-slate-100">
         {entries.length === 0
-          ? <div className="py-10 text-center text-sm" style={{ color: "#94a3b8" }}>No patients waiting right now.</div>
+          ? <div className="py-10 text-center text-sm text-slate-muted">No patients waiting right now.</div>
           : entries.slice(0, 8).map((entry, idx) => (
             <div key={entry.id} className="flex items-center gap-3 py-4">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black"
-                style={entry.status === "skipped"
-                  ? { backgroundColor: "#fefce8", color: "#d97706" }
+              <div className={[
+                "grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black",
+                entry.status === "skipped"
+                  ? "bg-amber-50 text-amber-600"
                   : idx === 0
-                    ? { backgroundColor: "#d1fae5", color: "#065f46" }
-                    : { backgroundColor: "#f1f5f9", color: "#475569" }}
-              >
+                    ? "bg-emerald-light text-emerald-text"
+                    : "bg-slate-100 text-slate-600",
+              ].join(" ")}>
                 {entry.tokenNumber}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold" style={{ color: "#0d1f35" }}>{entry.patientName}</p>
-                <p className="mt-0.5 text-xs" style={{ color: "#94a3b8" }}>
+                <p className="truncate text-sm font-bold text-ink">{entry.patientName}</p>
+                <p className="mt-0.5 text-xs text-slate-muted">
                   {entry.status === "skipped" ? "Skipped · ready to recall" : `${idx} ahead`}
                 </p>
               </div>
               {entry.status === "skipped"
-                ? <button onClick={() => onRecall(entry.id)} className="btn-ghost" style={{ padding: ".35rem .85rem", fontSize: ".75rem" }}>Recall</button>
-                : <span className="text-xs font-semibold" style={{ color: "#c8d6e3" }}>···{entry.phone.slice(-4)}</span>
+                ? <BtnGhost onClick={() => onRecall(entry.id)} className="!px-3 !py-1.5 !text-xs">Recall</BtnGhost>
+                : <span className="text-xs font-semibold text-slate-faint">···{entry.phone.slice(-4)}</span>
               }
             </div>
           ))
         }
       </div>
-    </div>
+    </Card>
   );
 }
 
+/* ─── Activity feed ─────────────────────────────── */
 function ActivityFeed({ state }: { state: QueueState }) {
-  const dotColor = (tone: string) => ({ green: "#10b981", amber: "#f59e0b", blue: "#3b82f6", slate: "#cbd5e1" })[tone] ?? "#cbd5e1";
+  const dotCls = (tone: string) => ({
+    green: "bg-emerald",
+    amber: "bg-amber-400",
+    blue:  "bg-blue-400",
+    slate: "bg-slate-300",
+  })[tone] ?? "bg-slate-300";
+
   return (
-    <div className="card p-6">
-      <div className="flex items-center justify-between mb-5">
+    <Card className="p-6">
+      <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[.15em]" style={{ color: "#94a3b8" }}>Activity</p>
-          <h2 className="mt-1.5 font-black" style={{ color: "#0d1f35" }}>Recent updates</h2>
+          <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Activity</p>
+          <h2 className="mt-1.5 font-black text-ink">Recent updates</h2>
         </div>
-        <History size={17} style={{ color: "#c8d6e3" }} />
+        <History size={17} className="text-slate-faint" />
       </div>
       <div className="space-y-4">
         {state.activity.slice(0, 5).map(item => (
           <div key={item.id} className="flex gap-3">
-            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: dotColor(item.tone) }} />
+            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotCls(item.tone)}`} />
             <div className="min-w-0">
-              <p className="text-xs font-bold" style={{ color: "#475569" }}>{item.label}</p>
-              <p className="truncate text-[11px]" style={{ color: "#94a3b8" }}>{item.detail} · {formatRelativeTime(item.time)}</p>
+              <p className="text-xs font-bold text-slate-600">{item.label}</p>
+              <p className="truncate text-[11px] text-slate-muted">
+                {item.detail} · {formatRelativeTime(item.time)}
+              </p>
             </div>
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
 
 export default App;
-
