@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { ClinicQueue } from "../src/queue.js";
 import { InMemoryWhatsAppProvider, NotificationOutbox } from "../src/whatsapp.js";
 
-function createQueue({ send } = {}) {
+function createQueue({ send, clock } = {}) {
   const provider = new InMemoryWhatsAppProvider({ send });
-  const outbox = new NotificationOutbox({ provider });
-  const queue = new ClinicQueue({ sessionId: "session-1", notificationOutbox: outbox });
+  const outbox = new NotificationOutbox({ provider, clock });
+  const queue = new ClinicQueue({ sessionId: "session-1", notificationOutbox: outbox, clock });
   queue.open();
   return { queue, provider, outbox };
 }
@@ -65,12 +65,40 @@ test("skipped tokens are excluded and recalled tokens enter the priority line", 
   assert.equal(outbox.list().some(record => record.tokenId === elder.id && record.type === "called"), true);
 });
 
-test("family member phone can manage an elder token", () => {
+test("patient queue snapshots do not expose phone numbers or names", () => {
   const { queue } = createQueue();
   const entry = queue.join({ patientName: "Elder Patient", phone: "+919800000004" });
-  assert.equal(entry.patientName, "Elder Patient");
+  assert.equal(entry.patientName, undefined);
+  assert.equal(entry.phone, undefined);
   assert.equal(entry.tokenNumber, 1);
   assert.equal(entry.status, "waiting");
+  assert.equal(queue.doctorSnapshot().entries[0].patientName, "Elder Patient");
+});
+
+test("one phone can create a second active family token only after five server minutes", () => {
+  let time = new Date("2026-09-12T10:00:00.000Z");
+  const clock = () => time;
+  const { queue } = createQueue({ clock });
+  const first = queue.join({ phone: "+919800000004" });
+
+  time = new Date("2026-09-12T10:04:01.000Z");
+  assert.throws(() => queue.join({ phone: "+919800000004" }), /approximately 1 minute/);
+
+  time = new Date("2026-09-12T10:05:00.000Z");
+  const second = queue.join({ phone: "+919800000004" });
+  assert.equal(second.tokenNumber, first.tokenNumber + 1);
+  assert.throws(() => queue.join({ phone: "+919800000004" }), /2 active tokens/);
+});
+
+test("a completed first token cannot unlock a later family token", async () => {
+  let time = new Date("2026-09-12T10:00:00.000Z");
+  const clock = () => time;
+  const { queue } = createQueue({ clock });
+  queue.join({ phone: "+919800000008" });
+  await queue.next();
+  await queue.next();
+  time = new Date("2026-09-12T10:06:00.000Z");
+  assert.throws(() => queue.join({ phone: "+919800000008" }), /no longer active/);
 });
 
 test("stop new tokens and end session block new registrations", () => {

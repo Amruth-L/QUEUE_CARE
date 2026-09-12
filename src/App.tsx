@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import QRCode from "qrcode";
 import {
   Activity,
@@ -7,11 +7,10 @@ import {
   Bell,
   Check,
   ChevronRight,
-  Clock3,
+  Clock,
   Copy,
   HeartPulse,
   History,
-  House,
   Info,
   MapPin,
   MessageCircle,
@@ -28,7 +27,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { QueueEntry, QueueState } from "./types";
-import { aheadFor, currentToken, formatRelativeTime, queueStore } from "./store";
+import { aheadFor, currentToken, formatRelativeTime, queueStore, tokenLabel } from "./store";
 
 const useQueue = () => useSyncExternalStore(queueStore.subscribe, queueStore.getState, queueStore.getState);
 
@@ -42,9 +41,9 @@ function BtnPrimary({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white shadow-btn transition-all duration-150
-        hover:bg-ink-soft hover:-translate-y-px hover:shadow-btn-lg
-        active:scale-[.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-ink to-ink-soft px-5 py-3 text-sm font-bold text-white shadow-btn transition-all duration-200
+        hover:-translate-y-0.5 hover:shadow-btn-lg active:translate-y-0 active:scale-[.985]
+        focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
         ${className}`}
     >
       {children}
@@ -60,9 +59,9 @@ function BtnAccent({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-emerald px-5 py-3 text-sm font-bold text-white shadow-btn-emerald border border-emerald-dark transition-all duration-150
-        hover:bg-emerald-dark hover:-translate-y-px hover:shadow-btn-emerald-lg
-        active:scale-[.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald to-emerald-dark px-5 py-3 text-sm font-bold text-white shadow-btn-emerald border border-emerald-dark transition-all duration-200
+        hover:-translate-y-0.5 hover:shadow-btn-emerald-lg active:translate-y-0 active:scale-[.985]
+        focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
         ${className}`}
     >
       {children}
@@ -78,9 +77,9 @@ function BtnGhost({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-5 py-3 text-sm font-bold text-ink shadow-sm transition-all duration-150
-        hover:bg-mist hover:border-slate-300 hover:-translate-y-px hover:shadow
-        active:scale-[.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-5 py-3 text-sm font-bold text-ink shadow-sm transition-all duration-200
+        hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md
+        active:translate-y-0 active:scale-[.985] focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
         ${className}`}
     >
       {children}
@@ -96,9 +95,9 @@ function BtnDanger({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-bold text-red-600 transition-all duration-150
-        hover:bg-red-100 hover:border-red-300 hover:text-red-700 hover:-translate-y-px hover:shadow-sm
-        active:scale-[.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-bold text-red-600 transition-all duration-200
+        hover:-translate-y-0.5 hover:border-red-300 hover:bg-red-100 hover:text-red-700 hover:shadow-sm
+        active:translate-y-0 active:scale-[.985] focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
         ${className}`}
     >
       {children}
@@ -114,9 +113,9 @@ function BtnSubtle({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-500 transition-all duration-150
-        hover:bg-slate-200 hover:text-slate-800 hover:-translate-y-px
-        active:scale-[.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+      className={`inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-500 transition-all duration-200
+        hover:-translate-y-0.5 hover:bg-slate-200 hover:text-slate-800
+        active:translate-y-0 active:scale-[.985] focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
         ${className}`}
     >
       {children}
@@ -127,7 +126,7 @@ function BtnSubtle({
 /** Card wrapper */
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-border bg-white shadow-card ${className}`}>
+    <div className={`rounded-[1.35rem] border border-border bg-white shadow-card ${className}`}>
       {children}
     </div>
   );
@@ -138,8 +137,8 @@ function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInput
   return (
     <input
       {...props}
-      className={`w-full rounded-xl border border-border bg-mist px-4 py-3 text-sm font-sans text-ink outline-none placeholder:text-slate-muted
-        transition-all duration-150 focus:border-emerald focus:bg-white focus:ring-2 focus:ring-emerald/10
+      className={`w-full rounded-xl border border-border bg-slate-50 px-4 py-3.5 text-sm font-sans text-ink outline-none placeholder:text-slate-muted
+        transition-all duration-200 focus:border-emerald focus:bg-white focus:ring-4 focus:ring-emerald/10
         ${className}`}
     />
   );
@@ -195,11 +194,11 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-mist text-ink font-sans">
-      <Header route={route} navigate={navigate} />
+    <div className="app-canvas min-h-screen text-ink font-sans">
+      {route !== "patient" && <Header route={route} navigate={navigate} />}
       <div className="animate-fade-in">
         {route === "home" && <Home navigate={navigate} state={state} />}
-        {route === "patient" && <PatientJoin state={state} navigate={navigate} />}
+        {route === "patient" && <PatientJoin state={state} />}
         {route === "doctor" && (
           doctorAuthenticated
             ? <DoctorDashboard
@@ -208,19 +207,20 @@ function App() {
                 onLogout={() => {
                   sessionStorage.removeItem("queuecare-doctor-token");
                   setDoctorAuthenticated(false);
+                  void queueStore.refreshServerConnection();
                 }}
               />
             : <DoctorAuth onSuccess={() => setDoctorAuthenticated(true)} />
         )}
       </div>
-      <footer className="mt-12 border-t border-border">
+      {route !== "patient" && <footer className="mt-12 border-t border-border">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 text-xs font-medium text-slate-muted">
           <span>QueueCare · receptionist-free waiting</span>
           <span className="flex items-center gap-1.5">
             <ShieldCheck size={13} className="text-emerald" /> Private queue session
           </span>
         </div>
-      </footer>
+      </footer>}
     </div>
   );
 }
@@ -228,15 +228,15 @@ function App() {
 /* ─── Header ────────────────────────────────────── */
 function Header({ route, navigate }: { route: string; navigate: (route: string) => void }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <button onClick={() => navigate("home")} className="flex items-center gap-3 transition hover:opacity-80">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-ink text-emerald-glow">
+    <header className="sticky top-0 z-40 border-b border-border/90 bg-white/95">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5 sm:px-6">
+        <button onClick={() => navigate("home")} className="flex items-center gap-3 rounded-xl transition hover:opacity-80 focus-visible:outline-none">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-ink to-ink-soft text-emerald-glow shadow-btn">
             <HeartPulse size={18} />
           </span>
           <span>
             <span className="block text-sm font-extrabold text-ink">QueueCare</span>
-            <span className="block text-[11px] text-slate-muted">virtual waiting room</span>
+            <span className="block text-[11px] font-medium text-slate-muted">virtual waiting room</span>
           </span>
         </button>
 
@@ -247,7 +247,7 @@ function Header({ route, navigate }: { route: string; navigate: (route: string) 
 
         <BtnGhost
           onClick={() => navigate(route === "doctor" ? "home" : "doctor")}
-          className="!px-4 !py-2 !text-xs"
+          className="!px-3.5 !py-2.5 !text-xs sm:!px-4"
         >
           <Stethoscope size={14} />
           {route === "doctor" ? "Patient view" : "Doctor dashboard"}
@@ -262,21 +262,21 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
   return (
     <main>
       {/* Hero */}
-      <section className="mx-auto grid max-w-7xl gap-14 px-6 pb-20 pt-14 lg:grid-cols-2 lg:items-center lg:pt-24">
-        <div>
+      <section className="hero-grid relative mx-auto grid max-w-7xl gap-14 overflow-hidden px-6 pb-20 pt-16 lg:grid-cols-2 lg:items-center lg:pt-24">
+        <div className="relative z-10">
           <Badge variant="green" className="mb-6">
             <Sparkles size={12} /> Less waiting. More care.
           </Badge>
-          <h1 className="max-w-xl text-5xl font-black leading-[1.06] tracking-tight text-ink sm:text-6xl">
+          <h1 className="max-w-xl text-5xl font-black leading-[1.04] tracking-[-.045em] text-ink sm:text-6xl lg:text-[4.25rem]">
             Your place in line,{" "}
             <span className="text-emerald">without the line.</span>
           </h1>
-          <p className="mt-5 max-w-lg text-base leading-7 text-slate-soft">
+          <p className="mt-6 max-w-lg text-base leading-7 text-slate-soft">
             Scan the clinic QR, get your token, and wait comfortably nearby.
             We'll keep you updated on WhatsApp as your turn gets closer.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-9 flex flex-wrap gap-3">
             <BtnPrimary onClick={() => navigate("patient")}>
               <QrCode size={17} /> Join the queue <ArrowRight size={15} />
             </BtnPrimary>
@@ -296,7 +296,7 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
       </section>
 
       {/* Feature strip */}
-      <section className="border-y border-border bg-white">
+      <section className="border-y border-border bg-white/80">
         <div className="mx-auto grid max-w-7xl gap-5 px-6 py-14 sm:grid-cols-3">
           <Feature icon={<QrCode size={20} />} title="One quick scan" text="The clinic QR stays on the wall. Scan it when you arrive." />
           <Feature icon={<Bell size={20} />} title="Stay in the loop" text="Get alerts at 10, 5, 3, 1 people ahead, and when called." />
@@ -310,32 +310,33 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
 function QueuePreview({ state }: { state: QueueState }) {
   const waiting = state.entries.filter(e => e.status === "waiting").length;
   return (
-    <div className="animate-slide-up mx-auto w-full max-w-md">
-      <div className="rounded-2xl bg-ink p-6 text-white sm:p-8">
+    <div className="animate-slide-up relative mx-auto w-full max-w-md">
+      <div className="absolute -inset-3 -z-10 rounded-[2rem] bg-emerald/10 blur-2xl" />
+      <div className="rounded-[1.65rem] bg-gradient-to-br from-ink via-ink to-ink-soft p-6 text-white shadow-card sm:p-8">
         <div className="flex items-center justify-between border-b border-white/10 pb-5">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.18em] text-emerald">Aster Lane Clinic</p>
             <p className="mt-1 text-sm text-white/50">Evening queue · open now</p>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald/15 px-2.5 py-1 text-[.65rem] font-bold text-emerald-glow">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-dark px-2.5 py-1 text-[.65rem] font-bold text-white">
             ● LIVE
           </span>
         </div>
 
         <div className="py-8 text-center">
           <p className="text-xs font-bold uppercase tracking-[.18em] text-white/35">Now serving</p>
-          <p className="mt-2 text-8xl font-black tracking-tight">{currentToken(state)?.tokenNumber ?? "—"}</p>
+          <p className="mt-2 text-8xl font-black tracking-tight">{currentToken(state) ? tokenLabel(currentToken(state)!.tokenNumber) : "—"}</p>
           <p className="mt-3 text-sm text-white/45">{waiting} people waiting</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-white/[.06] p-4">
+          <div className="rounded-xl bg-ink-soft p-4">
             <p className="text-[11px] font-semibold text-white/35">Next update</p>
             <p className="mt-1 text-sm font-bold">WhatsApp</p>
           </div>
-          <div className="rounded-xl bg-emerald/12 p-4">
-            <p className="text-[11px] font-semibold text-emerald-glow/60">Session</p>
-            <p className="mt-1 text-sm font-bold text-emerald-glow">Until doctor ends</p>
+          <div className="rounded-xl bg-emerald-dark p-4">
+            <p className="text-[11px] font-semibold text-emerald-light">Session</p>
+            <p className="mt-1 text-sm font-bold text-white">Until doctor ends</p>
           </div>
         </div>
       </div>
@@ -345,8 +346,8 @@ function QueuePreview({ state }: { state: QueueState }) {
 
 function Feature({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
-    <Card className="p-6">
-      <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-emerald-xlight text-emerald">
+    <Card className="group p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-card-hover">
+      <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-emerald-xlight text-emerald transition-transform duration-200 group-hover:scale-105">
         {icon}
       </div>
       <h3 className="font-bold text-ink">{title}</h3>
@@ -356,220 +357,281 @@ function Feature({ icon, title, text }: { icon: ReactNode; title: string; text: 
 }
 
 /* ─── Patient Join ──────────────────────────────── */
-function PatientJoin({ state, navigate }: { state: QueueState; navigate: (route: string) => void }) {
-  const [assisted, setAssisted] = useState(false);
-  const [name, setName] = useState("");
+function PatientJoin({ state }: { state: QueueState }) {
   const [phone, setPhone] = useState("");
-  const [optedIn, setOptedIn] = useState(true);
-  const [joined, setJoined] = useState<QueueEntry | null>(null);
+  const [entryId, setEntryId] = useState(() => sessionStorage.getItem("queuecare-patient-entry") ?? "");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const clinicId = new URLSearchParams(window.location.search).get("join") ?? "clinic-demo";
+  const existingEntry = state.entries.find(entry => entry.id === entryId) ?? null;
 
   const join = async () => {
-    setError(""); setLoading(true);
-    try { setJoined(await queueStore.join({ patientName: name, phone, assisted })); }
-    catch (err) { setError(err instanceof Error ? err.message : "Could not join the queue."); }
-    finally { setLoading(false); }
+    setError("");
+    setLoading(true);
+    try {
+      const entry = await queueStore.join({ phone, clinicId });
+      sessionStorage.setItem("queuecare-patient-entry", entry.id);
+      setEntryId(entry.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not join the queue.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (joined) return <PatientToken entry={joined} state={state} navigate={navigate} />;
+  if (existingEntry) return <PatientToken entry={existingEntry} state={state} onRequestAnother={() => setEntryId("")} />;
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 sm:py-16">
-      <div className="grid gap-10 lg:grid-cols-[.9fr_1.1fr] lg:items-start">
-
-        {/* Left info */}
-        <div className="pt-2">
-          <button
-            onClick={() => navigate("home")}
-            className="mb-8 flex items-center gap-2 text-sm font-semibold text-slate-muted transition hover:text-ink"
-          >
-            <ArrowLeft size={15} /> Back to home
-          </button>
-          <Badge variant="green" className="mb-5">
-            <MapPin size={12} /> Aster Lane Clinic · Session open
-          </Badge>
-          <h1 className="text-4xl font-black tracking-tight text-ink sm:text-5xl">
-            Join the queue<br /><span className="text-emerald">from here.</span>
-          </h1>
-          <p className="mt-5 max-w-md text-base leading-7 text-slate-soft">
-            You're joining through the clinic QR. Your place is based on the real-time order you enter.
-          </p>
-          <div className="mt-8 space-y-3">
-            <Step n="01" text="Be within 10–100 meters of the clinic" />
-            <Step n="02" text="Enter the patient details below" />
-            <Step n="03" text="Keep WhatsApp open for updates" />
+    <main className="patient-canvas mx-auto flex min-h-screen max-w-md items-center px-5 py-8 sm:px-6">
+      <section className="w-full">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-ink to-ink-soft text-emerald-glow shadow-btn">
+            <HeartPulse size={22} />
           </div>
+          <p className="text-xs font-bold uppercase tracking-[.16em] text-emerald">{state.clinicName}</p>
+          <h1 className="mt-3 text-4xl font-black tracking-[-.04em] text-ink">Join the queue</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-soft">Enter your mobile number to get your token and live queue updates.</p>
         </div>
 
-        {/* Form card */}
-        <Card className="p-6 sm:p-8">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">New queue entry</p>
-              <h2 className="mt-2 text-xl font-black text-ink">Who are you registering?</h2>
-            </div>
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-xlight text-emerald">
-              <Users size={19} />
-            </div>
-          </div>
-
-          {/* Toggle */}
-          <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-mist p-1">
-            <button
-              onClick={() => setAssisted(false)}
-              className={`rounded-lg py-2.5 text-sm font-bold transition-all ${
-                !assisted ? "bg-white text-ink shadow-sm" : "text-slate-muted hover:text-ink"
-              }`}
-            >
-              Myself
-            </button>
-            <button
-              onClick={() => setAssisted(true)}
-              className={`rounded-lg py-2.5 text-sm font-bold transition-all ${
-                assisted ? "bg-white text-ink shadow-sm" : "text-slate-muted hover:text-ink"
-              }`}
-            >
-              Someone else
-            </button>
-          </div>
-
-          {assisted && (
-            <div className="mb-5 flex gap-3 rounded-xl bg-blue-50 p-4 text-sm leading-5 text-blue-800">
-              <Info size={17} className="mt-0.5 shrink-0" />
-              <span>Registering an elder? Use your own phone. WhatsApp updates will come to you.</span>
-            </div>
-          )}
-
-          <label className="mb-1 block text-sm font-bold text-ink">Patient name</label>
-          <Input
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder={assisted ? "Enter elder's name" : "Enter your name"}
-            className="mb-5"
-          />
-
-          <label className="mb-1 block text-sm font-bold text-ink">WhatsApp number</label>
+        <Card className="p-5 ring-1 ring-white/70 sm:p-6">
+          <label className="mb-2 block text-sm font-bold text-ink">Mobile number</label>
           <div className="relative mb-5">
             <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-muted" />
-            <Input
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              placeholder="+91 98765 43210"
-              type="tel"
-              className="pl-9"
-            />
+            <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="98765 43210" type="tel" inputMode="tel" autoComplete="tel" className="pl-9" />
           </div>
 
-          <label className="mb-6 flex cursor-pointer items-start gap-2.5 text-xs leading-5 text-slate-soft">
-            <input
-              checked={optedIn}
-              onChange={e => setOptedIn(e.target.checked)}
-              type="checkbox"
-              className="mt-0.5 h-4 w-4 accent-emerald"
-            />
-            I agree to receive queue updates on WhatsApp for this clinic session.
-          </label>
+          {error && <div role="alert" className="mb-5 flex gap-2.5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold leading-5 text-red-700"><Info size={17} className="mt-0.5 shrink-0" />{error}</div>}
 
-          {error && (
-            <div className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
-              {error}
-            </div>
-          )}
-
-          <BtnPrimary onClick={join} disabled={!optedIn || loading} className="w-full">
+          <BtnPrimary onClick={join} disabled={loading || !phone.trim()} className="min-h-12 w-full">
             <Zap size={16} className="text-emerald-glow" />
-            {loading ? "Joining…" : "Get my token"}
+            {loading ? "Getting token…" : "Get token"}
             <ArrowRight size={15} />
           </BtnPrimary>
 
-          <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-slate-muted">
-            <ShieldCheck size={12} className="text-emerald" /> Your token is only valid for today's session
-          </p>
+          <p className="mt-4 text-center text-[11px] leading-5 text-slate-muted">Need a token for a family member? Scan again after 5 minutes while your first token is still active.</p>
         </Card>
-      </div>
+      </section>
     </main>
   );
 }
 
-function Step({ n, text }: { n: string; text: string }) {
+/* ─── Animated number — re-triggers pop on every value change ─ */
+function AnimatedNumber({ value, className = "" }: { value: string | number; className?: string }) {
   return (
-    <div className="flex items-center gap-3">
-      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white text-[10px] font-black text-emerald shadow-sm">
-        {n}
-      </span>
-      <span className="text-sm text-slate-soft">{text}</span>
+    <span key={String(value)} className={`inline-block [animation:var(--animate-num-pop)] ${className}`}>
+      {value}
+    </span>
+  );
+}
+
+/* ─── Queue Status Card ─────────────────────────── */
+const AVG_CONSULT_MINUTES = 5;
+
+type QueueStatusInfo = {
+  statusLabel: string;
+  statusVariant: "green" | "blue" | "amber" | "slate" | "red";
+  headline: string;
+  subline: string;
+  patientsAhead: number | null;
+  patientsBehind: number | null;
+  queuePosition: number | null;
+  estimatedWait: number | null;
+  currentServing: string;
+};
+
+function deriveQueueStatus(liveEntry: QueueEntry, state: QueueState): QueueStatusInfo {
+  const orderedWaiting = [...state.entries]
+    .filter(e => e.status === "waiting")
+    .sort((a, b) => Number(b.priority) - Number(a.priority) || a.tokenNumber - b.tokenNumber);
+
+  const current = currentToken(state);
+  const currentServing = current ? tokenLabel(current.tokenNumber) : "—";
+
+  if (liveEntry.status === "called") {
+    return { statusLabel: "YOUR TURN", statusVariant: "green", headline: "Please proceed now", subline: "The doctor is ready for you", patientsAhead: 0, patientsBehind: orderedWaiting.length, queuePosition: 0, estimatedWait: 0, currentServing };
+  }
+  if (liveEntry.status === "skipped") {
+    return { statusLabel: "SKIPPED", statusVariant: "amber", headline: "Your token was skipped", subline: "Please check with the clinic reception", patientsAhead: null, patientsBehind: null, queuePosition: null, estimatedWait: null, currentServing };
+  }
+  if (liveEntry.status === "completed") {
+    return { statusLabel: "COMPLETED", statusVariant: "slate", headline: "Consultation complete", subline: "Thank you for visiting", patientsAhead: null, patientsBehind: null, queuePosition: null, estimatedWait: null, currentServing };
+  }
+
+  // status === "waiting"
+  const myIndex = orderedWaiting.findIndex(e => e.id === liveEntry.id);
+  const patientsAhead = myIndex === -1 ? 0 : myIndex;
+  const patientsBehind = myIndex === -1 ? 0 : orderedWaiting.length - myIndex - 1;
+  const queuePosition = patientsAhead + 1;
+  const estimatedWait = patientsAhead * AVG_CONSULT_MINUTES;
+
+  if (patientsAhead === 0) {
+    return { statusLabel: "NEXT UP", statusVariant: "blue", headline: "You're next!", subline: "Get ready — the doctor will call you soon", patientsAhead, patientsBehind, queuePosition, estimatedWait, currentServing };
+  }
+  if (patientsAhead <= 3) {
+    return { statusLabel: "ALMOST YOUR TURN", statusVariant: "blue", headline: `You're #${queuePosition} in the queue`, subline: "Please stay nearby — your turn is coming up", patientsAhead, patientsBehind, queuePosition, estimatedWait, currentServing };
+  }
+  return { statusLabel: "WAITING", statusVariant: "slate", headline: `You're #${queuePosition} in the queue`, subline: "Relax nearby — we'll update you on WhatsApp", patientsAhead, patientsBehind, queuePosition, estimatedWait, currentServing };
+}
+
+function QueueStatusCard({ liveEntry, state }: { liveEntry: QueueEntry; state: QueueState }) {
+  const info = deriveQueueStatus(liveEntry, state);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [displayTime, setDisplayTime] = useState("just now");
+  const prevAheadRef = useRef<number | null>(info.patientsAhead);
+
+  // Detect when queue changes to update the timestamp
+  useEffect(() => {
+    if (prevAheadRef.current !== info.patientsAhead) {
+      prevAheadRef.current = info.patientsAhead;
+      setLastUpdated(new Date());
+    }
+  }, [info.patientsAhead, liveEntry.status]);
+
+  // Update relative time display every 30s
+  useEffect(() => {
+    const tick = () => {
+      const diff = Math.floor((Date.now() - lastUpdated.getTime()) / 1000);
+      if (diff < 10) setDisplayTime("just now");
+      else if (diff < 60) setDisplayTime(`${diff}s ago`);
+      else setDisplayTime(`${Math.floor(diff / 60)}m ago`);
+    };
+    tick();
+    const id = setInterval(tick, 10000);
+    return () => clearInterval(id);
+  }, [lastUpdated]);
+
+  const isCalled = liveEntry.status === "called";
+  const isTerminal = liveEntry.status === "completed" || liveEntry.status === "skipped";
+
+  return (
+    <div className="animate-slide-up w-full">
+      {/* Status badge */}
+      <div className="mb-4 flex items-center justify-center gap-2">
+        <Badge variant={info.statusVariant} className="!px-3 !py-1.5 !text-[.72rem]">
+          {isCalled ? <Bell size={11} className="animate-pulse-dot" /> : null}
+          {info.statusLabel}
+        </Badge>
+      </div>
+
+      {/* Main position headline */}
+      <Card className="overflow-hidden ring-1 ring-white/70">
+        {/* Hero section */}
+        <div className={`px-6 py-7 text-center ${
+          isCalled ? "bg-gradient-to-br from-emerald-xlight to-white" :
+          isTerminal ? "bg-mist" : "bg-white"
+        }`}>
+          <p className="text-[11px] font-bold uppercase tracking-[.16em] text-slate-muted">Your token</p>
+          <p className={`mt-0.5 text-6xl font-black tracking-[-.06em] ${
+            isCalled ? "text-emerald" : "text-ink"
+          }`}>
+            <AnimatedNumber value={tokenLabel(liveEntry.tokenNumber)} />
+          </p>
+          <p className={`mt-2 text-sm font-semibold ${
+            isCalled ? "text-emerald-text" : isTerminal ? "text-slate-soft" : "text-ink"
+          }`}>{info.headline}</p>
+          <p className="mt-1 text-xs text-slate-muted">{info.subline}</p>
+        </div>
+
+        {/* Now serving row */}
+        <div className="flex items-center justify-between border-y border-border bg-mist/60 px-5 py-3.5">
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-soft">
+            <Clock size={13} /> Now serving
+          </span>
+          <span className="text-xl font-black tracking-tight text-ink">
+            <AnimatedNumber value={info.currentServing} />
+          </span>
+        </div>
+
+        {/* Stats grid — only when waiting or called */}
+        {!isTerminal && (
+          <div className="grid grid-cols-3 divide-x divide-border border-b border-border">
+            <div className="px-4 py-4 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-[.12em] text-slate-muted">Ahead</p>
+              <p className="mt-1 text-2xl font-black text-ink">
+                {isCalled
+                  ? <span className="text-emerald text-lg font-bold">—</span>
+                  : <AnimatedNumber value={info.patientsAhead ?? 0} />}
+              </p>
+            </div>
+            <div className="px-4 py-4 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-[.12em] text-slate-muted">Behind</p>
+              <p className="mt-1 text-2xl font-black text-ink">
+                <AnimatedNumber value={info.patientsBehind ?? 0} />
+              </p>
+            </div>
+            <div className="px-4 py-4 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-[.12em] text-slate-muted">Est. wait</p>
+              <p className="mt-1 text-2xl font-black text-ink">
+                {isCalled
+                  ? <span className="text-emerald text-lg font-bold">Now</span>
+                  : info.estimatedWait === 0
+                    ? <span className="text-[.95rem] font-bold text-slate-soft leading-none pt-1 block">Very soon</span>
+                    : <AnimatedNumber value={`~${info.estimatedWait}m`} className="text-[1.3rem]" />}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Live indicator footer */}
+        <div className="flex items-center justify-center gap-2 bg-mist px-5 py-3.5 text-xs text-slate-soft">
+          <LiveDot />
+          <span>Queue updated <span className="font-semibold">{displayTime}</span></span>
+        </div>
+      </Card>
     </div>
   );
 }
 
 /* ─── Patient Token ─────────────────────────────── */
-function PatientToken({ entry, state, navigate }: { entry: QueueEntry; state: QueueState; navigate: (route: string) => void }) {
+function PatientToken({ entry, state, onRequestAnother }: { entry: QueueEntry; state: QueueState; onRequestAnother: () => void }) {
   const liveEntry = state.entries.find(i => i.id === entry.id) ?? entry;
-  const ahead = aheadFor(liveEntry, state);
   const called = liveEntry.status === "called";
   const skipped = liveEntry.status === "skipped";
+  const completed = liveEntry.status === "completed";
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10 sm:py-16 animate-fade-in">
-      <div className="mb-10 text-center">
-        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-emerald-xlight text-emerald">
-          <Check size={26} />
-        </div>
-        <p className="text-xs font-bold uppercase tracking-[.18em] text-emerald">
-          {called ? "Your turn is ready" : skipped ? "Token skipped" : "You're in the queue"}
-        </p>
-        <h1 className="mt-3 text-5xl font-black tracking-tight text-ink sm:text-7xl">
-          Token <span className="text-emerald">{liveEntry.tokenNumber}</span>
-        </h1>
-        <p className="mt-3 text-sm text-slate-soft">{liveEntry.patientName} · Aster Lane Clinic</p>
-      </div>
-
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <StatCard label="People ahead" value={called ? "Now" : skipped ? "Skipped" : String(ahead ?? 0)} icon={<Users size={18} />} tone="green" />
-        <StatCard label="Current token" value={String(currentToken(state)?.tokenNumber ?? "—")} icon={<Activity size={18} />} tone="slate" />
-        <StatCard label="Updates" value="WhatsApp" icon={<MessageCircle size={18} />} tone="amber" />
-      </div>
-
-      <Card className="p-6 sm:p-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="font-black text-ink">Live queue status</h2>
-            <p className="mt-1 text-sm text-slate-muted">Updates automatically in real time.</p>
-          </div>
-          <span className="flex items-center gap-1.5 text-xs font-bold text-emerald">
-            <LiveDot /> Live
+    <main className="patient-canvas mx-auto flex min-h-screen max-w-md items-start justify-center px-5 py-8 sm:px-6 animate-fade-in">
+      <section className="w-full pt-4">
+        {/* Clinic brand */}
+        <div className="mb-6 flex items-center justify-center gap-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-ink to-ink-soft text-emerald-glow shadow-btn">
+            <HeartPulse size={16} />
+          </span>
+          <span>
+            <span className="block text-sm font-extrabold text-ink">{state.clinicName}</span>
+            <span className="block text-[10px] font-medium text-slate-muted">virtual waiting room</span>
           </span>
         </div>
 
-        <div className="h-2.5 overflow-hidden rounded-full bg-border">
-          <div
-            className="h-full rounded-full bg-emerald transition-[width] duration-700"
-            style={{
-              width: called
-                ? "100%"
-                : `${Math.max(8, 100 - ((ahead ?? 0) / Math.max(1, state.entries.length)) * 100)}%`,
-            }}
-          />
-        </div>
-        <div className="mt-2 flex justify-between text-xs font-semibold text-slate-muted">
-          <span>Joined</span>
-          <span>{called ? "Called!" : ahead === 1 ? "You're next" : `${ahead ?? 0} ahead`}</span>
-        </div>
+        {/* Called alert banner */}
+        {called && (
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-emerald-light bg-emerald-xlight px-4 py-3.5">
+            <Bell size={18} className="shrink-0 text-emerald" />
+            <p className="text-sm font-bold text-emerald-text">Token {tokenLabel(liveEntry.tokenNumber)} called — please proceed to the consultation room now.</p>
+          </div>
+        )}
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          <Badge variant="green"><MessageCircle size={12} /> WhatsApp alerts active</Badge>
-          <Badge variant="slate"><Clock3 size={12} /> Session open</Badge>
-        </div>
-      </Card>
+        {/* Rich queue status */}
+        <QueueStatusCard liveEntry={liveEntry} state={state} />
 
-      <div className="mt-6 text-center">
-        <BtnGhost onClick={() => navigate("home")} className="!px-4 !py-2 !text-xs">
-          <House size={15} /> Return home
-        </BtnGhost>
-      </div>
+        <p className="mt-5 text-center text-[11px] leading-5 text-slate-muted">
+          We'll also alert you on WhatsApp as your turn approaches.
+        </p>
+        {!completed && !skipped && (
+          <button
+            onClick={onRequestAnother}
+            className="mx-auto mt-4 block text-xs font-bold text-emerald underline-offset-4 hover:underline"
+          >
+            Get a token for a family member
+          </button>
+        )}
+      </section>
     </main>
   );
+}
+
+function PatientMetric({ label, value, emphasis = false }: { label: string; value: string; emphasis?: boolean }) {
+  return <div className="flex items-center justify-between px-5 py-5"><p className="text-sm font-semibold text-slate-soft">{label}</p><p className={`text-right font-black tracking-[-.035em] ${emphasis ? "text-3xl text-emerald" : "text-2xl text-ink"}`}>{value}</p></div>;
 }
 
 /* ─── Doctor Auth ───────────────────────────────── */
@@ -582,6 +644,22 @@ function DoctorAuth({ onSuccess }: { onSuccess: () => void }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /** Safely parse a fetch Response as JSON, handling empty or non-JSON bodies. */
+  const safeJson = async (res: Response): Promise<Record<string, unknown>> => {
+    const contentType = res.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      return res.json() as Promise<Record<string, unknown>>;
+    }
+    const text = await res.text();
+    if (import.meta.env.DEV) {
+      console.warn(`[QueueCare] Non-JSON response from ${res.url} (${res.status}):`, text || "<empty body>");
+    }
+    if (!text) {
+      throw new Error("The server is not reachable. Please ensure the API server is running and try again.");
+    }
+    throw new Error(text);
+  };
+
   const requestCode = async () => {
     setLoading(true); setError("");
     try {
@@ -590,13 +668,15 @@ function DoctorAuth({ onSuccess }: { onSuccess: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setChallengeId(data.challengeId);
-      setMaskedPhone(data.maskedPhone);
-      setDemoCode(data.demoCode ?? "");
-    } catch (err) { setError(err instanceof Error ? err.message : "Could not send OTP."); }
-    finally { setLoading(false); }
+      const data = await safeJson(res);
+      if (!res.ok) throw new Error((data.error as string) || "Could not send OTP.");
+      setChallengeId(data.challengeId as string);
+      setMaskedPhone(data.maskedPhone as string);
+      setDemoCode((data.demoCode as string) ?? "");
+    } catch (err) {
+      if (import.meta.env.DEV) console.error("[QueueCare] requestCode error:", err);
+      setError(err instanceof Error ? err.message : "Could not send OTP. Please try again.");
+    } finally { setLoading(false); }
   };
 
   const verifyCode = async () => {
@@ -607,32 +687,36 @@ function DoctorAuth({ onSuccess }: { onSuccess: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ challengeId, code }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      sessionStorage.setItem("queuecare-doctor-token", data.token);
+      const data = await safeJson(res);
+      if (!res.ok) throw new Error((data.error as string) || "Could not verify OTP.");
+      sessionStorage.setItem("queuecare-doctor-token", data.token as string);
+      await queueStore.refreshServerConnection();
       onSuccess();
-    } catch (err) { setError(err instanceof Error ? err.message : "Could not verify OTP."); }
-    finally { setLoading(false); }
+    } catch (err) {
+      if (import.meta.env.DEV) console.error("[QueueCare] verifyCode error:", err);
+      setError(err instanceof Error ? err.message : "Could not verify OTP. Please try again.");
+    } finally { setLoading(false); }
   };
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-140px)] max-w-4xl items-center justify-center px-6 py-12 animate-fade-in">
-      <div className="w-full overflow-hidden rounded-2xl border border-border shadow-card">
+    <main className="mx-auto flex min-h-[calc(100vh-140px)] max-w-5xl items-center justify-center px-5 py-10 sm:px-6 sm:py-12 animate-fade-in">
+      <div className="w-full overflow-hidden rounded-[1.6rem] border border-border bg-white shadow-card">
         <div className="grid lg:grid-cols-[.85fr_1.15fr]">
 
           {/* Left panel */}
-          <div className="hidden bg-ink p-10 text-white lg:block">
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald">
+          <div className="relative hidden overflow-hidden bg-gradient-to-br from-ink via-ink to-ink-soft p-10 text-white lg:block">
+            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-emerald/20 blur-3xl" />
+            <div className="relative grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-emerald to-emerald-dark shadow-btn-emerald">
               <Stethoscope size={22} />
             </div>
-            <p className="mt-10 text-[11px] font-bold uppercase tracking-[.2em] text-emerald-glow">Doctor portal</p>
-            <h2 className="mt-3 text-3xl font-black leading-tight tracking-tight">
+            <p className="relative mt-10 text-[11px] font-bold uppercase tracking-[.2em] text-emerald-glow">Doctor portal</p>
+            <h2 className="relative mt-3 text-3xl font-black leading-tight tracking-[-.04em]">
               Your clinic queue,<br />under control.
             </h2>
-            <p className="mt-4 text-sm leading-6 text-white/50">
+            <p className="relative mt-4 text-sm leading-6 text-white/60">
               Sign in securely to call the next patient, recall a missed turn, and keep the waiting room moving.
             </p>
-            <div className="mt-10 space-y-3 text-sm text-white/60">
+            <div className="relative mt-10 space-y-3 text-sm text-white/70">
               <span className="flex items-center gap-3"><ShieldCheck size={16} className="text-emerald-glow" /> OTP-protected access</span>
               <span className="flex items-center gap-3"><MessageCircle size={16} className="text-emerald-glow" /> Live patient updates</span>
               <span className="flex items-center gap-3"><Activity size={16} className="text-emerald-glow" /> One-tap queue control</span>
@@ -647,7 +731,7 @@ function DoctorAuth({ onSuccess }: { onSuccess: () => void }) {
 
             {!challengeId ? (
               <>
-                <h2 className="text-2xl font-black tracking-tight text-ink">Welcome back</h2>
+                <h2 className="text-3xl font-black tracking-[-.04em] text-ink">Welcome back</h2>
                 <p className="mb-7 mt-2 text-sm leading-6 text-slate-soft">
                   Enter the registered doctor mobile number to receive a one-time password.
                 </p>
@@ -662,7 +746,7 @@ function DoctorAuth({ onSuccess }: { onSuccess: () => void }) {
                     className="pl-9"
                   />
                 </div>
-                <BtnPrimary onClick={requestCode} disabled={loading} className="w-full">
+                <BtnPrimary onClick={requestCode} disabled={loading || !phone.trim()} className="w-full">
                   {loading ? "Sending…" : "Continue"} <ArrowRight size={15} />
                 </BtnPrimary>
               </>
@@ -674,7 +758,7 @@ function DoctorAuth({ onSuccess }: { onSuccess: () => void }) {
                 >
                   <ArrowLeft size={13} /> Change number
                 </button>
-                <h2 className="text-2xl font-black tracking-tight text-ink">Verify your number</h2>
+                <h2 className="text-3xl font-black tracking-[-.04em] text-ink">Verify your number</h2>
                 <p className="mb-7 mt-2 text-sm leading-6 text-slate-soft">
                   We sent a 6-digit OTP to <strong className="text-ink">{maskedPhone}</strong>.
                 </p>
@@ -686,7 +770,7 @@ function DoctorAuth({ onSuccess }: { onSuccess: () => void }) {
                   className="mb-4 text-center text-2xl font-black tracking-[.5em]"
                 />
                 {demoCode && (
-                  <div className="mb-5 rounded-xl bg-amber-50 px-4 py-3 text-xs font-semibold leading-5 text-amber-900">
+                  <div className="mb-5 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs font-semibold leading-5 text-amber-900">
                     <Info size={13} className="mr-1 inline" /> Local demo OTP:{" "}
                     <strong className="tracking-widest">{demoCode}</strong>
                   </div>
@@ -704,8 +788,8 @@ function DoctorAuth({ onSuccess }: { onSuccess: () => void }) {
             )}
 
             {error && (
-              <div className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
-                {error}
+              <div role="alert" className="mt-5 flex gap-2.5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                <Info size={17} className="mt-0.5 shrink-0" /> {error}
               </div>
             )}
 
@@ -746,21 +830,25 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
   state: QueueState; navigate: (route: string) => void; onLogout: () => void;
 }) {
   const [qr, setQr] = useState("");
+  const [doctorQr, setDoctorQr] = useState("");
   const [toast, setToast] = useState("");
   const waiting = state.entries.filter(e => e.status === "waiting");
   const skipped = state.entries.filter(e => e.status === "skipped");
   const called  = currentToken(state);
-  const [joinUrl, setJoinUrl] = useState(`${window.location.origin}/?join=clinic-demo`);
+  const [baseUrl, setBaseUrl] = useState(window.location.origin);
+  const joinUrl   = `${baseUrl}/?join=clinic-demo`;
+  const doctorUrl = `${baseUrl}/?doctor=1`;
 
   useEffect(() => {
     fetch("/api/config").then(r => r.ok ? r.json() : null).then(cfg => {
-      if (cfg?.publicUrl) setJoinUrl(`${cfg.publicUrl}/?join=clinic-demo`);
+      if (cfg?.publicUrl) setBaseUrl(cfg.publicUrl);
     }).catch(() => undefined);
   }, []);
 
   useEffect(() => {
-    QRCode.toDataURL(joinUrl, { width: 360, margin: 2, color: { dark: "#0d1f35", light: "#ffffff" } }).then(setQr);
-  }, [joinUrl]);
+    QRCode.toDataURL(joinUrl,   { width: 320, margin: 2, color: { dark: "#0d1f35", light: "#ffffff" } }).then(setQr);
+    QRCode.toDataURL(doctorUrl, { width: 320, margin: 2, color: { dark: "#0d1f35", light: "#ffffff" } }).then(setDoctorQr);
+  }, [joinUrl, doctorUrl]);
 
   const notify = (msg: string) => { setToast(msg); window.setTimeout(() => setToast(""), 3000); };
   const safe = async (action: () => Promise<void> | void, msg: string) => {
@@ -773,25 +861,26 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(
-        `Token number ${called.tokenNumber}, ${called.patientName}, please proceed to the doctor.`
+        `Token ${tokenLabel(called.tokenNumber)}, please proceed to the doctor.`
       );
       u.rate = 0.9;
       window.speechSynthesis.speak(u);
     }
-    void safe(() => queueStore.call(), `Token ${called.tokenNumber} announced`);
+    void safe(() => queueStore.call(), `Token ${tokenLabel(called.tokenNumber)} announced`);
   };
 
-  const copy = () => { navigator.clipboard?.writeText(joinUrl); notify("Patient join link copied"); };
+  const copyPatient = () => { navigator.clipboard?.writeText(joinUrl);   notify("Patient join link copied"); };
+  const copyDoctor  = () => { navigator.clipboard?.writeText(doctorUrl); notify("Doctor link copied"); };
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-8 animate-fade-in">
+    <main className="mx-auto max-w-7xl px-5 py-7 sm:px-6 sm:py-9 animate-fade-in">
       {/* Top bar */}
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <div className="mb-2 flex items-center gap-2 text-xs font-bold text-emerald">
             <LiveDot /> SESSION LIVE · 6:00 PM
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">Good evening, Doctor.</h1>
+          <h1 className="text-3xl font-black tracking-[-.04em] text-ink sm:text-4xl">Good evening, Doctor.</h1>
           <p className="mt-1.5 text-sm text-slate-soft">
             Your queue is in your hands. {waiting.length} patients are waiting.
           </p>
@@ -803,20 +892,20 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
         {/* Left column */}
         <div className="space-y-5">
           {/* Current token hero */}
-          <div className="rounded-2xl bg-ink p-6 text-white sm:p-8">
+          <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-ink via-ink to-ink-soft p-6 text-white shadow-card sm:p-8">
+            <div className="absolute -right-16 -top-24 h-56 w-56 rounded-full bg-emerald/15 blur-3xl" />
             <div className="mb-6 flex items-start justify-between">
-              <div>
+              <div className="relative">
                 <p className="text-[11px] font-bold uppercase tracking-[.18em] text-emerald-glow">Currently serving</p>
                 <div className="mt-3 flex items-end gap-4">
-                  <span className="text-8xl font-black leading-none tracking-tight">{called?.tokenNumber ?? "—"}</span>
-                  {called && <span className="mb-2 text-sm text-white/55">{called.patientName}</span>}
+                  <span className="text-8xl font-black leading-none tracking-tight">{called ? tokenLabel(called.tokenNumber) : "—"}</span>
                 </div>
               </div>
-              <div className="rounded-xl bg-white/[.08] p-2.5 text-emerald-glow">
+              <div className="relative rounded-xl bg-ink-soft p-2.5 text-emerald-glow">
                 <Activity size={20} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="relative grid grid-cols-2 gap-3 sm:grid-cols-4">
               <DashMetric label="Waiting"      value={String(waiting.length)} />
               <DashMetric label="Skipped"      value={String(skipped.length)} />
               <DashMetric label="Called today" value={String(state.entries.filter(e => e.status === "completed" || e.status === "called").length)} />
@@ -840,7 +929,7 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
               badge="Main"
               accent="emerald"
               primary
-              onClick={() => safe(() => queueStore.next(), called ? `Token ${waiting[0]?.tokenNumber ?? "—"} called` : "Next patient called")}
+              onClick={() => safe(() => queueStore.next(), waiting[0] ? `Token ${tokenLabel(waiting[0].tokenNumber)} called` : "Next patient called")}
             />
             <ActionBtn
               icon={<SkipForward size={20} />}
@@ -865,49 +954,121 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
 
         {/* Right sidebar */}
         <aside className="space-y-5">
-          {/* QR card */}
-          <Card className="p-6">
-            <div className="mb-5 flex items-start justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Permanent clinic QR</p>
-                <h2 className="mt-1.5 text-lg font-black text-ink">Put this on the wall</h2>
+
+          {/* ── Patient QR card ── */}
+          <Card className="overflow-hidden transition-shadow duration-200 hover:shadow-card-hover">
+            {/* Header strip */}
+            <div className="flex items-center justify-between bg-emerald-xlight px-5 py-3.5 border-b border-emerald-light">
+              <div className="flex items-center gap-2">
+                <div className="grid h-7 w-7 place-items-center rounded-lg bg-emerald text-white">
+                  <Users size={14} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-text">Patient QR</p>
+                  <p className="text-xs font-bold text-emerald-dark">Put this on the wall</p>
+                </div>
               </div>
-              <QrCode size={22} className="text-emerald" />
+              <QrCode size={18} className="text-emerald" />
             </div>
-            <div className="mx-auto w-fit rounded-xl border border-border p-3">
-              {qr
-                ? <img src={qr} alt="Clinic join QR code" className="h-44 w-44" />
-                : <div className="grid h-44 w-44 place-items-center bg-mist">
-                    <RefreshCw className="animate-spin text-slate-faint" />
-                  </div>
-              }
-            </div>
-            <div className="mt-4 rounded-xl bg-emerald-xlight p-3.5">
-              <p className="flex items-center gap-2 text-xs font-black text-emerald-text">
-                <Check size={13} /> QR is ready for scanning
+
+            <div className="p-5">
+              {/* QR image */}
+              <div className="mx-auto w-fit rounded-xl border border-border p-3">
+                {qr
+                  ? <img src={qr} alt="Patient join QR code" className="h-40 w-40" />
+                  : <div className="grid h-40 w-40 place-items-center bg-mist">
+                      <RefreshCw className="animate-spin text-slate-faint" />
+                    </div>
+                }
+              </div>
+
+              {/* URL strip */}
+              <div className="mt-3.5 rounded-lg bg-emerald-xlight px-3 py-2.5">
+                <p className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-text">
+                  <Check size={11} /> Patient join link
+                </p>
+                <p className="mt-0.5 break-all text-[10px] leading-4 text-emerald-dark/70">{joinUrl}</p>
+              </div>
+
+              <p className="mt-2.5 text-center text-[11px] leading-4 text-slate-muted">
+                Patients scan this to join the queue. Works every day.
               </p>
-              <p className="mt-1 break-all text-[11px] leading-4 text-emerald-dark/75">{joinUrl}</p>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <BtnGhost onClick={copyPatient} className="!px-3 !py-2 !text-xs">
+                  <Copy size={13} /> Copy link
+                </BtnGhost>
+                <a
+                  href={joinUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-ink/15 bg-ink px-3 py-2 text-xs font-bold text-white transition-all hover:bg-ink-soft active:scale-[.98]"
+                >
+                  <ArrowRight size={13} /> Test join
+                </a>
+              </div>
             </div>
-            <p className="mt-3 text-center text-xs leading-5 text-slate-muted">
-              Patients scan this same QR every day. It accepts tokens only while the session is open.
-            </p>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <BtnGhost onClick={copy} className="!px-3 !py-2 !text-xs">
-                <Copy size={14} /> Copy link
-              </BtnGhost>
-              <a
-                href={joinUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-ink/20 bg-ink px-3 py-2 text-xs font-bold text-white transition hover:bg-ink-soft"
-              >
-                <ArrowRight size={14} /> Test join
-              </a>
+          </Card>
+
+          {/* ── Doctor QR card ── */}
+          <Card className="overflow-hidden transition-shadow duration-200 hover:shadow-card-hover">
+            {/* Header strip */}
+            <div className="flex items-center justify-between bg-ink px-5 py-3.5">
+              <div className="flex items-center gap-2">
+                <div className="grid h-7 w-7 place-items-center rounded-lg bg-emerald text-white">
+                  <Stethoscope size={14} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-glow">Doctor QR</p>
+                  <p className="text-xs font-bold text-white">Private · for doctor only</p>
+                </div>
+              </div>
+              <span className="flex items-center gap-1 rounded-full bg-ink-soft px-2 py-0.5 text-[10px] font-bold text-emerald-glow">
+                <ShieldCheck size={10} /> Secure
+              </span>
+            </div>
+
+            <div className="p-5">
+              {/* QR image */}
+              <div className="mx-auto w-fit rounded-xl border border-border p-3">
+                {doctorQr
+                  ? <img src={doctorQr} alt="Doctor dashboard QR code" className="h-40 w-40" />
+                  : <div className="grid h-40 w-40 place-items-center bg-mist">
+                      <RefreshCw className="animate-spin text-slate-faint" />
+                    </div>
+                }
+              </div>
+
+              {/* URL strip */}
+              <div className="mt-3.5 rounded-lg bg-amber-50 px-3 py-2.5 border border-amber-100">
+                <p className="flex items-center gap-1.5 text-[10px] font-bold text-amber-800">
+                  <ShieldCheck size={11} /> Only share with the doctor
+                </p>
+                <p className="mt-0.5 break-all text-[10px] leading-4 text-amber-700/70">{doctorUrl}</p>
+              </div>
+
+              <p className="mt-2.5 text-center text-[11px] leading-4 text-slate-muted">
+                Scanning this opens secure doctor sign-in. An active doctor session opens the dashboard.
+              </p>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <BtnGhost onClick={copyDoctor} className="!px-3 !py-2 !text-xs">
+                  <Copy size={13} /> Copy link
+                </BtnGhost>
+                <a
+                  href={doctorUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-dark bg-emerald px-3 py-2 text-xs font-bold text-white transition-all hover:bg-emerald-dark active:scale-[.98]"
+                >
+                  <ArrowRight size={13} /> Open panel
+                </a>
+              </div>
             </div>
           </Card>
 
           {/* Session controls */}
-          <Card className="p-6">
+          <Card className="p-6 transition-shadow duration-200 hover:shadow-card-hover">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Session controls</p>
@@ -940,7 +1101,7 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex items-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white shadow-2xl">
+        <div role="status" className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white shadow-2xl animate-slide-up">
           <Check size={15} className="text-emerald-glow" /> {toast}
         </div>
       )}
@@ -957,33 +1118,37 @@ function ActionBtn({
   primary?: boolean; onClick: () => void; disabled?: boolean;
 }) {
   const accentMap = {
-    blue:    { icon: "text-blue-500",   badge: "bg-blue-100 text-blue-700" },
-    emerald: { icon: "text-emerald",     badge: "bg-emerald/20 text-white" },
-    amber:   { icon: "text-amber-500",  badge: "bg-amber-100 text-amber-700" },
-    purple:  { icon: "text-violet-500", badge: "bg-violet-100 text-violet-700" },
+    blue:    { iconWrap: "bg-blue-100 text-blue-600",    badge: "bg-blue-100 text-blue-700" },
+    emerald: { iconWrap: "bg-emerald-dark text-white",    badge: "bg-emerald-dark text-white" },
+    amber:   { iconWrap: "bg-amber-100 text-amber-600", badge: "bg-amber-100 text-amber-700" },
+    purple:  { iconWrap: "bg-violet-100 text-violet-600", badge: "bg-violet-100 text-violet-700" },
   };
-  const { icon: iconCls, badge: badgeCls } = accentMap[accent];
+  const { iconWrap, badge: badgeCls } = accentMap[accent];
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       className={[
-        "flex min-h-28 flex-col items-start justify-between rounded-2xl p-4 text-left font-black",
-        "transition-all duration-150 active:scale-[.97]",
-        "disabled:cursor-not-allowed disabled:opacity-40",
+        "flex min-h-32 flex-col items-start justify-between gap-6 rounded-[1.25rem] p-4 text-left w-full",
+        "transition-all duration-200 active:scale-[.985] focus-visible:outline-none",
+        "disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none",
         primary
-          ? "bg-emerald border border-emerald-dark text-white shadow-btn-emerald hover:bg-emerald-dark hover:-translate-y-px hover:shadow-btn-emerald-lg"
-          : "bg-white border border-border text-ink shadow-sm hover:bg-mist hover:-translate-y-px hover:shadow",
+          ? "bg-gradient-to-br from-emerald to-emerald-dark border border-emerald-dark text-white shadow-btn-emerald hover:-translate-y-0.5 hover:shadow-btn-emerald-lg"
+          : "bg-white border border-border text-ink shadow-sm hover:-translate-y-0.5 hover:border-slate-200 hover:bg-slate-50 hover:shadow-card",
       ].join(" ")}
     >
-      <span className="flex w-full items-center justify-between">
-        <span className={primary ? "text-white" : iconCls}>{icon}</span>
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${primary ? "bg-white/20 text-white" : badgeCls}`}>
+      {/* Top row: icon chip + badge */}
+      <span className="flex w-full items-start justify-between">
+        <span className={`grid h-10 w-10 place-items-center rounded-xl ${iconWrap}`}>
+          {icon}
+        </span>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${primary ? "bg-emerald-dark text-white" : badgeCls}`}>
           {badge}
         </span>
       </span>
-      <span className="text-sm">{label}</span>
+      {/* Label */}
+      <span className={`text-sm font-bold leading-tight ${primary ? "text-white" : "text-ink"}`}>{label}</span>
     </button>
   );
 }
@@ -991,7 +1156,7 @@ function ActionBtn({
 /* ─── Dashboard metric (inside dark hero) ───────── */
 function DashMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-white/[.07] p-3">
+    <div className="rounded-xl border border-white/5 bg-ink-soft p-3">
       <p className="text-[10px] font-bold uppercase tracking-wider text-white/35">{label}</p>
       <p className="mt-1 text-lg font-black text-white">{value}</p>
     </div>
@@ -1005,7 +1170,7 @@ function QueueTable({ state, onRecall }: { state: QueueState; onRecall: (id: str
     .sort((a, b) => Number(b.priority) - Number(a.priority) || a.tokenNumber - b.tokenNumber);
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 transition-shadow duration-200 hover:shadow-card-hover">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Up next</p>
@@ -1016,9 +1181,9 @@ function QueueTable({ state, onRecall }: { state: QueueState; onRecall: (id: str
 
       <div className="divide-y divide-slate-100">
         {entries.length === 0
-          ? <div className="py-10 text-center text-sm text-slate-muted">No patients waiting right now.</div>
+          ? <div className="py-12 text-center"><div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-emerald-xlight text-emerald"><Users size={19} /></div><p className="text-sm font-bold text-ink">Queue is clear</p><p className="mt-1 text-xs text-slate-muted">New patient tokens will appear here live.</p></div>
           : entries.slice(0, 8).map((entry, idx) => (
-            <div key={entry.id} className="flex items-center gap-3 py-4">
+            <div key={entry.id} className="flex items-center gap-3 rounded-xl px-2 py-4 transition-colors duration-150 hover:bg-mist">
               <div className={[
                 "grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black",
                 entry.status === "skipped"
@@ -1027,17 +1192,17 @@ function QueueTable({ state, onRecall }: { state: QueueState; onRecall: (id: str
                     ? "bg-emerald-light text-emerald-text"
                     : "bg-slate-100 text-slate-600",
               ].join(" ")}>
-                {entry.tokenNumber}
+                {tokenLabel(entry.tokenNumber)}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-ink">{entry.patientName}</p>
+                <p className="truncate text-sm font-bold text-ink">Token {tokenLabel(entry.tokenNumber)}</p>
                 <p className="mt-0.5 text-xs text-slate-muted">
                   {entry.status === "skipped" ? "Skipped · ready to recall" : `${idx} ahead`}
                 </p>
               </div>
               {entry.status === "skipped"
                 ? <BtnGhost onClick={() => onRecall(entry.id)} className="!px-3 !py-1.5 !text-xs">Recall</BtnGhost>
-                : <span className="text-xs font-semibold text-slate-faint">···{entry.phone.slice(-4)}</span>
+                : <span className="text-xs font-semibold text-slate-faint">···{entry.phone?.slice(-4) ?? "—"}</span>
               }
             </div>
           ))
@@ -1057,7 +1222,7 @@ function ActivityFeed({ state }: { state: QueueState }) {
   })[tone] ?? "bg-slate-300";
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 transition-shadow duration-200 hover:shadow-card-hover">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Activity</p>

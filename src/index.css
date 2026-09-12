@@ -2,36 +2,38 @@
 
 /* ── Tailwind v4: CSS-first design tokens ─── */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Avenir Next", ui-sans-serif, system-ui, sans-serif;
 
   /* Brand colours */
-  --color-ink:           #0d1f35;
-  --color-ink-soft:      #1e3451;
-  --color-mist:          #f5f8fc;
-  --color-border:        #e4eaf2;
+  --color-ink:           #10243e;
+  --color-ink-soft:      #1d3856;
+  --color-mist:          #f6f8fc;
+  --color-border:        #e5ebf3;
 
-  --color-emerald:       #10b981;
-  --color-emerald-dark:  #059669;
-  --color-emerald-light: #d1fae5;
-  --color-emerald-xlight: #f0fdf4;
-  --color-emerald-text:  #065f46;
-  --color-emerald-glow:  #34d399;
+  --color-emerald:       #0f9f7f;
+  --color-emerald-dark:  #087c64;
+  --color-emerald-light: #ccefe5;
+  --color-emerald-xlight: #effaf6;
+  --color-emerald-text:  #075b4b;
+  --color-emerald-glow:  #54d7b1;
 
   --color-slate-muted:   #94a3b8;
   --color-slate-soft:    #64748b;
   --color-slate-faint:   #c8d6e3;
 
   /* Shadows */
-  --shadow-card:          0 1px 3px rgba(13,31,53,.06), 0 6px 24px rgba(13,31,53,.07);
-  --shadow-btn:           0 2px 8px rgba(13,31,53,.18);
-  --shadow-btn-lg:        0 4px 16px rgba(13,31,53,.22);
-  --shadow-btn-emerald:   0 2px 10px rgba(16,185,129,.28);
-  --shadow-btn-emerald-lg: 0 4px 18px rgba(16,185,129,.34);
+  --shadow-card:          0 1px 2px rgba(16,36,62,.04), 0 12px 32px rgba(16,36,62,.07);
+  --shadow-card-hover:    0 18px 40px rgba(16,36,62,.11);
+  --shadow-btn:           0 4px 12px rgba(16,36,62,.18);
+  --shadow-btn-lg:        0 8px 20px rgba(16,36,62,.22);
+  --shadow-btn-emerald:   0 4px 12px rgba(15,159,127,.24);
+  --shadow-btn-emerald-lg: 0 8px 20px rgba(15,159,127,.30);
 
   /* Animations */
   --animate-pulse-dot:   pulse-dot 2s ease-in-out infinite;
   --animate-fade-in:     fade-in .35s ease both;
-  --animate-slide-up:    slide-up .4s cubic-bezier(.22,.68,0,1.2) both;
+  --animate-slide-up:    slide-up .45s cubic-bezier(.22,.68,0,1.08) both;
+  --animate-num-pop:     num-pop .32s cubic-bezier(.34,1.56,.64,1) both;
 
   @keyframes pulse-dot {
     0%, 100% { opacity: 1;   transform: scale(1); }
@@ -45,6 +47,11 @@
     from { opacity: 0; transform: translateY(18px); }
     to   { opacity: 1; transform: translateY(0); }
   }
+  @keyframes num-pop {
+    0%   { opacity: 0; transform: scale(.72) translateY(6px); }
+    60%  { opacity: 1; transform: scale(1.08) translateY(-2px); }
+    100% { opacity: 1; transform: scale(1)    translateY(0); }
+  }
 }
 
 /* ── Base ───────────────────────────────────── */
@@ -52,6 +59,8 @@
 html { scroll-behavior: smooth; }
 body {
   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  background: #f6f8fc;
+  color: #10243e;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -59,3 +68,39 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+.app-canvas {
+  background:
+    radial-gradient(circle at 86% -12%, rgba(84, 215, 177, .16), transparent 25rem),
+    radial-gradient(circle at 6% 34%, rgba(103, 159, 232, .09), transparent 28rem),
+    #f6f8fc;
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(16, 36, 62, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 36, 62, .035) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.patient-canvas {
+  background:
+    radial-gradient(circle at 50% -5%, rgba(84, 215, 177, .19), transparent 20rem),
+    #f6f8fc;
+}
+
+button, a, input { -webkit-tap-highlight-color: transparent; }
+
+:focus-visible {
+  outline: 3px solid rgba(15, 159, 127, .35);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

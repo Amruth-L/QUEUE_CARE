@@ -11,7 +11,7 @@ const THRESHOLDS: Array<{ ahead: number; type: NotificationType }> = [
 
 const notificationCopy: Record<NotificationType, string> = {
   ten_ahead: "Approximately 10 people are ahead of you.",
-  five_ahead: "Approximately 5 people are ahead of you.",
+  five_ahead: "Your turn is approaching. There are approximately 5 patients ahead of you. Please be ready.",
   three_ahead: "Approximately 3 people are ahead of you.",
   next: "You are next. Please be ready.",
   called: "Your token is called. Please proceed to the doctor."
@@ -122,16 +122,24 @@ export const queueStore = {
         .then(async response => { const result = await response.json(); if (!response.ok) throw new Error(result.error ?? "Could not join the queue."); return result as QueueEntry; });
       }
       if (state.status !== "open" || !state.acceptingTokens) throw new Error("New tokens are not available right now.");
-      if (!input.patientName.trim()) throw new Error("Please enter the patient name.");
-      if (!input.phone.trim()) throw new Error("Please enter a WhatsApp number.");
+      if (!/^\+?\d{10,15}$/.test(input.phone.replace(/[^\d+]/g, ""))) throw new Error("Enter a valid mobile number.");
       const normalizedPhone = input.phone.replace(/[^\d+]/g, "");
-      if (state.entries.some(entry => ["waiting", "called", "skipped"].includes(entry.status) && entry.phone === normalizedPhone)) {
-        throw new Error("This phone already has an active token for today.");
+      const samePhone = state.entries.filter(entry => entry.phone === normalizedPhone);
+      const active = samePhone.filter(entry => ["waiting", "called"].includes(entry.status));
+      if (active.length >= 2) throw new Error("You already have 2 active tokens in this queue.");
+      if (active.length === 1) {
+        const remainingMs = 5 * 60 * 1000 - (Date.now() - new Date(active[0].createdAt).getTime());
+        if (remainingMs > 0) {
+          const minutes = Math.ceil(remainingMs / 60000);
+          throw new Error(`You can generate another token in approximately ${minutes} minute${minutes === 1 ? "" : "s"}.`);
+        }
+      } else if (samePhone.length > 0) {
+        throw new Error("Your earlier token is no longer active, so another family token cannot be generated for this session.");
       }
       const entry: QueueEntry = {
         id: uid("token"),
         tokenNumber: state.nextTokenNumber,
-        patientName: input.patientName.trim(),
+        patientName: "Patient",
         phone: normalizedPhone,
         status: "waiting",
         priority: false,
@@ -140,7 +148,7 @@ export const queueStore = {
       };
       let next = { ...state, nextTokenNumber: state.nextTokenNumber + 1, entries: [...state.entries, entry] };
       next = sendNewNotifications(next);
-      next = { ...next, activity: addActivity(next, `Token ${entry.tokenNumber} joined`, input.assisted ? `${entry.patientName} · assisted by family member` : entry.patientName, "blue") };
+      next = { ...next, activity: addActivity(next, `Token A${entry.tokenNumber} joined`, "Patient joined the queue", "blue") };
       publish(next);
       return entry;
     });
@@ -157,7 +165,7 @@ export const queueStore = {
     const notification: NotificationRecord = { id: `${next.sessionId}:${nextCandidate.id}:called`, entryId: nextCandidate.id, type: "called", status: "sent", message: notificationCopy.called, createdAt: now() };
     next = { ...next, notifications: next.notifications.some(item => item.id === notification.id) ? next.notifications : [...next.notifications, notification] };
     next = sendNewNotifications(next);
-    next = { ...next, activity: addActivity(next, `Token ${nextCandidate.tokenNumber} called`, nextCandidate.patientName, "green") };
+    next = { ...next, activity: addActivity(next, `Token A${nextCandidate.tokenNumber} called`, nextCandidate.patientName ?? "Patient called", "green") };
     publish(next);
   },
   async call() {
@@ -165,7 +173,7 @@ export const queueStore = {
     if (serverMode) { await serverAction("/api/action/call"); return; }
     const current = currentToken(state);
     if (!current) throw new Error("There is no active token to call.");
-    publish({ ...state, activity: addActivity(state, `Token ${current.tokenNumber} announced`, current.patientName, "green") });
+    publish({ ...state, activity: addActivity(state, `Token A${current.tokenNumber} announced`, "Patient called again", "green") });
   },
   async skip() {
     await serverReady;
@@ -174,7 +182,7 @@ export const queueStore = {
     if (!current) throw new Error("There is no called token to skip.");
     let next = { ...state, entries: state.entries.map(entry => entry.id === current.id ? { ...entry, status: "skipped" as const, updatedAt: now() } : entry) };
     next = sendNewNotifications(next);
-    next = { ...next, activity: addActivity(next, `Token ${current.tokenNumber} skipped`, `${current.patientName} can be recalled`, "amber") };
+    next = { ...next, activity: addActivity(next, `Token A${current.tokenNumber} skipped`, "Token can be recalled", "amber") };
     publish(next);
   },
   async recall(entryId: string) {
@@ -184,7 +192,7 @@ export const queueStore = {
     if (!entry) throw new Error("Only skipped tokens can be recalled.");
     let next = { ...state, entries: state.entries.map(item => item.id === entryId ? { ...item, status: "waiting" as const, priority: true, updatedAt: now() } : item) };
     next = sendNewNotifications(next);
-    next = { ...next, activity: addActivity(next, `Token ${entry.tokenNumber} recalled`, `${entry.patientName} moved to priority line`, "blue") };
+    next = { ...next, activity: addActivity(next, `Token A${entry.tokenNumber} recalled`, "Moved to priority line", "blue") };
     publish(next);
   },
   stopNewTokens() {
@@ -197,6 +205,9 @@ export const queueStore = {
   },
   resetDemo() {
     publish(initialState());
+  },
+  refreshServerConnection() {
+    return connectServer();
   }
 };
 
@@ -211,13 +222,16 @@ async function serverAction(path: string, input: Record<string, string> = {}) {
 async function connectServer() {
   if (typeof window === "undefined") return;
   try {
-    const response = await fetch("/api/state");
+    socket?.close();
+    const token = sessionStorage.getItem("queuecare-doctor-token");
+    const response = await fetch("/api/state", { headers: token ? { Authorization: `Bearer ${token}` } : {} });
     if (!response.ok) return;
     state = await response.json() as QueueState;
     serverMode = true;
     listeners.forEach(listener => listener(state));
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
+    const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : "";
+    socket = new WebSocket(`${protocol}//${window.location.host}/ws${tokenQuery}`);
     socket.onmessage = event => {
       const message = JSON.parse(event.data) as { type: string; state: QueueState };
       if (message.type === "state") {
@@ -238,6 +252,10 @@ export function aheadFor(entry: QueueEntry, value = state) {
 
 export function currentToken(value = state) {
   return value.entries.find(entry => entry.status === "called") ?? null;
+}
+
+export function tokenLabel(tokenNumber: number) {
+  return `A${tokenNumber}`;
 }
 
 export function formatRelativeTime(iso: string) {

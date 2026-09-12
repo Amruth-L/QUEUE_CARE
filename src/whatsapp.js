@@ -13,7 +13,7 @@ const TEMPLATES = Object.freeze({
   },
   [NOTIFICATION_TYPES.FIVE_AHEAD]: {
     name: "queue_five_ahead",
-    body: "Approximately 5 people are ahead of you."
+    body: "Your turn is approaching. There are approximately 5 patients ahead of you. Please be ready."
   },
   [NOTIFICATION_TYPES.THREE_AHEAD]: {
     name: "queue_three_ahead",

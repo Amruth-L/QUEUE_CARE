@@ -8,7 +8,11 @@ const THRESHOLDS = Object.freeze([
   { ahead: 1, type: NOTIFICATION_TYPES.NEXT }
 ]);
 
-const ACTIVE_STATUSES = new Set(["waiting", "called", "skipped"]);
+// A skipped token can be recalled by the doctor, but it is not an active token
+// for family-token eligibility. This prevents an old, skipped token from being
+// used to create another token from the same phone.
+const ACTIVE_STATUSES = new Set(["waiting", "called"]);
+const FAMILY_TOKEN_INTERVAL_MS = 5 * 60 * 1000;
 
 function normalizePhone(phone) {
   return String(phone ?? "").replace(/[^\d+]/g, "");
@@ -53,21 +57,39 @@ export class ClinicQueue extends EventEmitter {
   join({ patientName, phone, isWhatsAppOptedIn = true }) {
     this.#requireOpen();
     if (!this.acceptingTokens) throw new Error("New tokens are stopped");
-    if (!patientName?.trim()) throw new Error("Patient name is required");
     const normalizedPhone = normalizePhone(phone);
-    if (!normalizedPhone) throw new Error("A WhatsApp phone number is required");
+    if (!/^\+?\d{10,15}$/.test(normalizedPhone)) {
+      throw new Error("Enter a valid mobile number");
+    }
     if (!isWhatsAppOptedIn) throw new Error("WhatsApp notification opt-in is required");
 
-    const activeSamePhone = this.entries.some(entry =>
-      ACTIVE_STATUSES.has(entry.status) && entry.phone === normalizedPhone
-    );
-    if (activeSamePhone) throw new Error("This phone already has an active token");
+    const samePhoneEntries = this.entries.filter(entry => entry.phone === normalizedPhone);
+    const activeSamePhone = samePhoneEntries
+      .filter(entry => ACTIVE_STATUSES.has(entry.status));
+
+    if (activeSamePhone.length >= 2) {
+      throw new Error("You already have 2 active tokens in this queue.");
+    }
+
+    if (activeSamePhone.length === 1) {
+      const firstTokenCreatedAt = new Date(activeSamePhone[0].createdAt).getTime();
+      const remainingMs = FAMILY_TOKEN_INTERVAL_MS - (this.clock().getTime() - firstTokenCreatedAt);
+      if (remainingMs > 0) {
+        const remainingMinutes = Math.ceil(remainingMs / 60000);
+        throw new Error(`You can generate another token in approximately ${remainingMinutes} minute${remainingMinutes === 1 ? "" : "s"}.`);
+      }
+    } else if (samePhoneEntries.length > 0) {
+      throw new Error("Your earlier token is no longer active, so another family token cannot be generated for this session.");
+    }
 
     const entry = {
       id: `entry-${this.nextEntryId++}`,
       sessionId: this.sessionId,
       tokenNumber: this.nextTokenNumber++,
-      patientName: patientName.trim(),
+      // The patient QR deliberately does not collect a name. Keep a neutral
+      // internal label so existing doctor and notification integrations remain
+      // compatible without publishing patient identity to other patients.
+      patientName: patientName?.trim() || "Patient",
       phone: normalizedPhone,
       status: "waiting",
       priority: false,
@@ -128,14 +150,18 @@ export class ClinicQueue extends EventEmitter {
     return entry ? this.#publicEntry(entry) : null;
   }
 
-  snapshot() {
+  snapshot({ includePatientDetails = false } = {}) {
     return {
       sessionId: this.sessionId,
       status: this.status,
       acceptingTokens: this.acceptingTokens,
-      current: this.#publicEntry(this.entries.find(entry => entry.status === "called") ?? null),
-      entries: this.#orderedEntries().map(entry => this.#publicEntry(entry))
+      current: this.#publicEntry(this.entries.find(entry => entry.status === "called") ?? null, includePatientDetails),
+      entries: this.#orderedEntries().map(entry => this.#publicEntry(entry, includePatientDetails))
     };
+  }
+
+  doctorSnapshot() {
+    return this.snapshot({ includePatientDetails: true });
   }
 
   async #notifyWaitingEntries() {
@@ -181,9 +207,14 @@ export class ClinicQueue extends EventEmitter {
     return snapshot;
   }
 
-  #publicEntry(entry) {
+  #publicEntry(entry, includePatientDetails = false) {
     if (!entry) return null;
     const ahead = entry.status === "waiting" ? this.#peopleAhead(entry) : null;
-    return { ...entry, peopleAhead: ahead };
+    const { phone, patientName, ...publicEntry } = entry;
+    return {
+      ...publicEntry,
+      ...(includePatientDetails ? { patientName, phone } : {}),
+      peopleAhead: ahead
+    };
   }
 }

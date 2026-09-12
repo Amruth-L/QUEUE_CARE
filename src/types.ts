@@ -6,8 +6,10 @@ export type NotificationStatus = "pending" | "sent" | "delivered" | "failed";
 export interface QueueEntry {
   id: string;
   tokenNumber: number;
-  patientName: string;
-  phone: string;
+  /** Present only in an authenticated doctor state response. */
+  patientName?: string;
+  /** Present only in an authenticated doctor state response. */
+  phone?: string;
   status: TokenStatus;
   priority: boolean;
   createdAt: string;
@@ -44,7 +46,6 @@ export interface ActivityItem {
 }
 
 export interface JoinInput {
-  patientName: string;
   phone: string;
-  assisted: boolean;
+  clinicId?: string;
 }
