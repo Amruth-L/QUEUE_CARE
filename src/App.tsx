@@ -41,8 +41,8 @@ function BtnPrimary({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-ink to-ink-soft px-5 py-3 text-sm font-bold text-white shadow-btn transition-all duration-200
-        hover:-translate-y-0.5 hover:shadow-btn-lg active:translate-y-0 active:scale-[.985]
+      className={`relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-br from-ink via-ink-soft to-ink-xsoft px-6 py-4 text-sm font-bold tracking-wide text-white shadow-btn transition-all duration-200
+        hover:-translate-y-0.5 hover:shadow-btn-lg active:translate-y-0 active:scale-[.975]
         focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
         ${className}`}
     >
@@ -51,7 +51,7 @@ function BtnPrimary({
   );
 }
 
-/** Accent button — emerald fill */
+/** Accent button */
 function BtnAccent({
   onClick, disabled, children, className = "",
 }: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
@@ -59,8 +59,8 @@ function BtnAccent({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald to-emerald-dark px-5 py-3 text-sm font-bold text-white shadow-btn-emerald border border-emerald-dark transition-all duration-200
-        hover:-translate-y-0.5 hover:shadow-btn-emerald-lg active:translate-y-0 active:scale-[.985]
+      className={`relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald to-emerald-dark px-6 py-4 text-sm font-bold tracking-wide text-white shadow-btn-emerald transition-all duration-200
+        hover:-translate-y-0.5 hover:shadow-btn-emerald-lg active:translate-y-0 active:scale-[.975]
         focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
         ${className}`}
     >
@@ -69,7 +69,7 @@ function BtnAccent({
   );
 }
 
-/** Ghost / secondary button — white surface with border */
+/** Ghost / secondary button */
 function BtnGhost({
   onClick, disabled, children, className = "",
 }: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
@@ -77,9 +77,9 @@ function BtnGhost({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-5 py-3 text-sm font-bold text-ink shadow-sm transition-all duration-200
-        hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md
-        active:translate-y-0 active:scale-[.985] focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+      className={`inline-flex items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white/90 px-5 py-3.5 text-sm font-semibold text-ink backdrop-blur-sm transition-all duration-200
+        hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-md
+        active:translate-y-0 active:scale-[.975] focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
         ${className}`}
     >
       {children}
@@ -87,7 +87,7 @@ function BtnGhost({
   );
 }
 
-/** Danger button — red tint */
+/** Danger button */
 function BtnDanger({
   onClick, disabled, children, className = "",
 }: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
@@ -95,9 +95,9 @@ function BtnDanger({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-bold text-red-600 transition-all duration-200
-        hover:-translate-y-0.5 hover:border-red-300 hover:bg-red-100 hover:text-red-700 hover:shadow-sm
-        active:translate-y-0 active:scale-[.985] focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+      className={`inline-flex items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-6 py-3.5 text-sm font-bold text-red-600 transition-all duration-200
+        hover:-translate-y-0.5 hover:border-red-300 hover:bg-red-100 hover:text-red-700 hover:shadow-md
+        active:translate-y-0 active:scale-[.975] focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
         ${className}`}
     >
       {children}
@@ -105,7 +105,7 @@ function BtnDanger({
   );
 }
 
-/** Subtle utility button — slate tint */
+/** Subtle utility button */
 function BtnSubtle({
   onClick, disabled, children, className = "",
 }: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
@@ -113,9 +113,9 @@ function BtnSubtle({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-500 transition-all duration-200
-        hover:-translate-y-0.5 hover:bg-slate-200 hover:text-slate-800
-        active:translate-y-0 active:scale-[.985] focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+      className={`inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-500 transition-all duration-150
+        hover:bg-slate-200 hover:text-slate-800
+        active:scale-[.975] focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
         ${className}`}
     >
       {children}
@@ -126,7 +126,7 @@ function BtnSubtle({
 /** Card wrapper */
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-[1.35rem] border border-border bg-white shadow-card ${className}`}>
+    <div className={`rounded-[1.6rem] border border-border/60 bg-white shadow-card ${className}`}>
       {children}
     </div>
   );
@@ -137,7 +137,7 @@ function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInput
   return (
     <input
       {...props}
-      className={`w-full rounded-xl border border-border bg-slate-50 px-4 py-3.5 text-sm font-sans text-ink outline-none placeholder:text-slate-muted
+      className={`w-full rounded-2xl border border-border bg-slate-50 px-4 py-4 text-sm font-sans text-ink outline-none placeholder:text-slate-muted/80
         transition-all duration-200 focus:border-emerald focus:bg-white focus:ring-4 focus:ring-emerald/10
         ${className}`}
     />
@@ -151,14 +151,14 @@ function Badge({ children, variant = "slate", className = "" }: {
   className?: string;
 }) {
   const variants = {
-    green: "bg-emerald-light text-emerald-text",
-    blue: "bg-blue-100 text-blue-900",
-    amber: "bg-amber-100 text-amber-900",
-    slate: "bg-slate-100 text-slate-600",
-    red: "bg-red-100 text-red-800",
+    green: "bg-emerald-xlight text-emerald-text border border-emerald-light",
+    blue:  "bg-blue-50 text-blue-700 border border-blue-100",
+    amber: "bg-amber-50 text-amber-700 border border-amber-100",
+    slate: "bg-slate-100 text-slate-600 border border-slate-200",
+    red:   "bg-red-50 text-red-700 border border-red-100",
   };
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[.7rem] font-bold tracking-wide ${variants[variant]} ${className}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[.68rem] font-bold tracking-widest uppercase ${variants[variant]} ${className}`}>
       {children}
     </span>
   );
@@ -166,7 +166,12 @@ function Badge({ children, variant = "slate", className = "" }: {
 
 /** Animated live dot */
 function LiveDot() {
-  return <span className="inline-block h-2 w-2 rounded-full bg-emerald animate-pulse-dot" />;
+  return (
+    <span className="relative inline-flex h-2.5 w-2.5">
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald opacity-50" />
+      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald" />
+    </span>
+  );
 }
 
 /* ─── App shell ─────────────────────────────────── */
@@ -225,31 +230,31 @@ function App() {
   );
 }
 
-/* ─── Header ────────────────────────────────────── */
+/* ─── Header ────────────────────────────────── */
 function Header({ route, navigate }: { route: string; navigate: (route: string) => void }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/90 bg-white/95">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5 sm:px-6">
-        <button onClick={() => navigate("home")} className="flex items-center gap-3 rounded-xl transition hover:opacity-80 focus-visible:outline-none">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-ink to-ink-soft text-emerald-glow shadow-btn">
-            <HeartPulse size={18} />
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-white/85 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-6">
+        <button onClick={() => navigate("home")} className="flex items-center gap-3 rounded-2xl p-1 transition-all hover:opacity-80 focus-visible:outline-none">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-ink via-ink-soft to-ink-xsoft text-emerald-glow shadow-btn">
+            <HeartPulse size={17} strokeWidth={2.5} />
           </span>
           <span>
-            <span className="block text-sm font-extrabold text-ink">QueueCare</span>
-            <span className="block text-[11px] font-medium text-slate-muted">virtual waiting room</span>
+            <span className="block text-[13px] font-extrabold tracking-tight text-ink">QueueCare</span>
+            <span className="block text-[10px] font-medium text-slate-muted">virtual waiting room</span>
           </span>
         </button>
 
-        <div className="hidden items-center gap-2 sm:flex">
+        <div className="hidden items-center gap-2.5 sm:flex">
           <LiveDot />
           <span className="text-xs font-semibold text-slate-soft">Live queue</span>
         </div>
 
         <BtnGhost
           onClick={() => navigate(route === "doctor" ? "home" : "doctor")}
-          className="!px-3.5 !py-2.5 !text-xs sm:!px-4"
+          className="!px-3.5 !py-2 !text-xs !font-semibold sm:!px-4"
         >
-          <Stethoscope size={14} />
+          <Stethoscope size={13} />
           {route === "doctor" ? "Patient view" : "Doctor dashboard"}
         </BtnGhost>
       </div>
@@ -257,19 +262,21 @@ function Header({ route, navigate }: { route: string; navigate: (route: string) 
   );
 }
 
-/* ─── Home ──────────────────────────────────────── */
+/* ─── Home ────────────────────────────────────── */
 function Home({ navigate, state }: { navigate: (route: string) => void; state: QueueState }) {
   return (
     <main>
       {/* Hero */}
-      <section className="hero-grid relative mx-auto grid max-w-7xl gap-14 overflow-hidden px-6 pb-20 pt-16 lg:grid-cols-2 lg:items-center lg:pt-24">
+      <section className="hero-grid relative mx-auto grid max-w-7xl gap-12 overflow-hidden px-6 pb-20 pt-16 lg:grid-cols-2 lg:items-center lg:pt-24">
+        {/* Ambient glow */}
+        <div className="pointer-events-none absolute -top-24 right-0 h-96 w-96 rounded-full bg-emerald/10 blur-3xl" />
         <div className="relative z-10">
-          <Badge variant="green" className="mb-6">
-            <Sparkles size={12} /> Less waiting. More care.
+          <Badge variant="green" className="mb-7">
+            <Sparkles size={11} /> Less waiting. More care.
           </Badge>
-          <h1 className="max-w-xl text-5xl font-black leading-[1.04] tracking-[-.045em] text-ink sm:text-6xl lg:text-[4.25rem]">
+          <h1 className="max-w-xl text-5xl font-black leading-[1.03] tracking-[-.05em] text-ink sm:text-6xl lg:text-[4.5rem]">
             Your place in line,{" "}
-            <span className="text-emerald">without the line.</span>
+            <span className="bg-gradient-to-r from-emerald to-emerald-dark bg-clip-text text-transparent">without the line.</span>
           </h1>
           <p className="mt-6 max-w-lg text-base leading-7 text-slate-soft">
             Scan the clinic QR, get your token, and wait comfortably nearby.
@@ -285,10 +292,16 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
             </BtnGhost>
           </div>
 
-          <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-muted">
-            <span className="flex items-center gap-1.5"><ShieldCheck size={13} className="text-emerald" /> No app download</span>
-            <span className="flex items-center gap-1.5"><MessageCircle size={13} className="text-emerald" /> WhatsApp updates</span>
-            <span className="flex items-center gap-1.5"><MapPin size={13} className="text-emerald" /> Join near clinic</span>
+          <div className="mt-8 flex flex-wrap gap-2">
+            {[
+              { icon: <ShieldCheck size={12} />, label: "No app download" },
+              { icon: <MessageCircle size={12} />, label: "WhatsApp updates" },
+              { icon: <MapPin size={12} />, label: "Join near clinic" },
+            ].map(({ icon, label }) => (
+              <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-slate-soft shadow-sm backdrop-blur-sm">
+                <span className="text-emerald">{icon}</span> {label}
+              </span>
+            ))}
           </div>
         </div>
 
@@ -296,8 +309,8 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
       </section>
 
       {/* Feature strip */}
-      <section className="border-y border-border bg-white/80">
-        <div className="mx-auto grid max-w-7xl gap-5 px-6 py-14 sm:grid-cols-3">
+      <section className="border-y border-border/60 bg-white/60 backdrop-blur-sm">
+        <div className="mx-auto grid max-w-7xl gap-4 px-6 py-14 sm:grid-cols-3">
           <Feature icon={<QrCode size={20} />} title="One quick scan" text="The clinic QR stays on the wall. Scan it when you arrive." />
           <Feature icon={<Bell size={20} />} title="Stay in the loop" text="Get alerts at 10, 5, 3, 1 people ahead, and when called." />
           <Feature icon={<Users size={20} />} title="Bring someone along" text="A family member can register an elder from their own phone." />
@@ -309,33 +322,37 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
 
 function QueuePreview({ state }: { state: QueueState }) {
   const waiting = state.entries.filter(e => e.status === "waiting").length;
+  const token = currentToken(state);
   return (
-    <div className="animate-slide-up relative mx-auto w-full max-w-md">
-      <div className="absolute -inset-3 -z-10 rounded-[2rem] bg-emerald/10 blur-2xl" />
-      <div className="rounded-[1.65rem] bg-gradient-to-br from-ink via-ink to-ink-soft p-6 text-white shadow-card sm:p-8">
+    <div className="[animation:var(--animate-slide-up)] relative mx-auto w-full max-w-md">
+      <div className="absolute -inset-4 -z-10 rounded-[2.5rem] bg-emerald/12 blur-3xl" />
+      <div className="rounded-[1.8rem] bg-gradient-to-br from-ink via-ink-soft to-ink-xsoft p-6 text-white shadow-card sm:p-8">
+        {/* Header row */}
         <div className="flex items-center justify-between border-b border-white/10 pb-5">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[.18em] text-emerald">Aster Lane Clinic</p>
-            <p className="mt-1 text-sm text-white/50">Evening queue · open now</p>
+            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-emerald-glow">Aster Lane Clinic</p>
+            <p className="mt-1 text-xs text-white/50">Evening queue · open now</p>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-dark px-2.5 py-1 text-[.65rem] font-bold text-white">
-            ● LIVE
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-dark/80 px-3 py-1 text-[.65rem] font-bold text-white backdrop-blur-sm">
+            <LiveDot /> LIVE
           </span>
         </div>
 
-        <div className="py-8 text-center">
-          <p className="text-xs font-bold uppercase tracking-[.18em] text-white/35">Now serving</p>
-          <p className="mt-2 text-8xl font-black tracking-tight">{currentToken(state) ? tokenLabel(currentToken(state)!.tokenNumber) : "—"}</p>
-          <p className="mt-3 text-sm text-white/45">{waiting} people waiting</p>
+        {/* Big token number */}
+        <div className="py-9 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Now serving</p>
+          <p className="mt-2 text-8xl font-black tracking-tight">{token ? tokenLabel(token.tokenNumber) : "—"}</p>
+          <p className="mt-3 text-sm text-white/45">{waiting} {waiting === 1 ? "person" : "people"} waiting</p>
         </div>
 
+        {/* Stat pills */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-ink-soft p-4">
-            <p className="text-[11px] font-semibold text-white/35">Next update</p>
+          <div className="rounded-2xl bg-white/8 p-4 ring-1 ring-white/10">
+            <p className="text-[10px] font-semibold text-white/40">Next update</p>
             <p className="mt-1 text-sm font-bold">WhatsApp</p>
           </div>
-          <div className="rounded-xl bg-emerald-dark p-4">
-            <p className="text-[11px] font-semibold text-emerald-light">Session</p>
+          <div className="rounded-2xl bg-emerald-dark/70 p-4 ring-1 ring-emerald-glow/20">
+            <p className="text-[10px] font-semibold text-emerald-light/70">Session</p>
             <p className="mt-1 text-sm font-bold text-white">Until doctor ends</p>
           </div>
         </div>
@@ -346,17 +363,15 @@ function QueuePreview({ state }: { state: QueueState }) {
 
 function Feature({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
-    <Card className="group p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-card-hover">
-      <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-emerald-xlight text-emerald transition-transform duration-200 group-hover:scale-105">
+    <Card className="group cursor-default p-6 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card-hover">
+      <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-emerald-xlight to-emerald-light text-emerald transition-all duration-300 group-hover:scale-110 group-hover:shadow-btn-emerald">
         {icon}
       </div>
       <h3 className="font-bold text-ink">{title}</h3>
       <p className="mt-2 text-sm leading-6 text-slate-soft">{text}</p>
     </Card>
   );
-}
-
-/* ─── Patient Join ──────────────────────────────── */
+}1 /* ─── Patient Join ─────────────────────────────── */
 function PatientJoin({ state }: { state: QueueState }) {
   const [phone, setPhone] = useState("");
   const [entryId, setEntryId] = useState(() => sessionStorage.getItem("queuecare-patient-entry") ?? "");
@@ -382,28 +397,61 @@ function PatientJoin({ state }: { state: QueueState }) {
   if (existingEntry) return <PatientToken entry={existingEntry} state={state} onRequestAnother={() => setEntryId("")} />;
 
   return (
-    <main className="patient-canvas mx-auto flex min-h-screen max-w-md items-center px-5 py-8 sm:px-6">
+    <main className="patient-canvas mx-auto flex min-h-screen max-w-md items-center px-5 py-10 sm:px-6 [animation:var(--animate-fade-in)]">
       <section className="w-full">
+        {/* Icon + branding */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-ink to-ink-soft text-emerald-glow shadow-btn">
-            <HeartPulse size={22} />
+          <div className="relative mx-auto mb-6 w-fit">
+            <div className="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-ink via-ink-soft to-ink-xsoft text-emerald-glow shadow-btn">
+              <HeartPulse size={26} strokeWidth={2.2} />
+            </div>
+            <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-emerald text-[9px] font-black text-white shadow-btn-emerald">
+              <Check size={10} strokeWidth={3} />
+            </span>
           </div>
-          <p className="text-xs font-bold uppercase tracking-[.16em] text-emerald">{state.clinicName}</p>
-          <h1 className="mt-3 text-4xl font-black tracking-[-.04em] text-ink">Join the queue</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-soft">Enter your mobile number to get your token and live queue updates.</p>
+          <p className="text-[11px] font-bold uppercase tracking-[.18em] text-emerald">{state.clinicName}</p>
+          <h1 className="mt-2 text-4xl font-black tracking-[-.04em] text-ink">Join the queue</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-soft">Enter your mobile number to receive your token and live updates.</p>
         </div>
 
-        <Card className="p-5 ring-1 ring-white/70 sm:p-6">
-          <label className="mb-2 block text-sm font-bold text-ink">Mobile number</label>
-          <div className="relative mb-5">
-            <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-muted" />
-            <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="98765 43210" type="tel" inputMode="tel" autoComplete="tel" className="pl-9" />
+        <Card className="overflow-hidden">
+          <div className="p-5 sm:p-6">
+            <label className="mb-1.5 block text-sm font-bold text-ink">Mobile number</label>
+            <div className="relative mb-5">
+              <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-muted" />
+              <Input
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && !loading && phone.trim() && join()}
+                placeholder="98765 43210"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                className="pl-11"
+              />
+            </div>
+
+            {error && (
+              <div role="alert" className="mb-5 flex gap-2.5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3.5 text-sm font-semibold leading-5 text-red-700">
+                <Info size={17} className="mt-0.5 shrink-0" />{error}
+              </div>
+            )}
+
+            <BtnPrimary onClick={join} disabled={loading || !phone.trim()} className="w-full">
+              <Zap size={16} className="text-emerald-glow" />
+              {loading ? "Getting your token…" : "Get token"}
+              {!loading && <ArrowRight size={15} />}
+            </BtnPrimary>
           </div>
 
-          {error && <div role="alert" className="mb-5 flex gap-2.5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold leading-5 text-red-700"><Info size={17} className="mt-0.5 shrink-0" />{error}</div>}
-
-          <BtnPrimary onClick={join} disabled={loading || !phone.trim()} className="min-h-12 w-full">
-            <Zap size={16} className="text-emerald-glow" />
+          <div className="border-t border-border/60 bg-mist px-5 py-3.5 text-center text-[11px] leading-5 text-slate-muted">
+            Need a token for a family member? Scan again after 5 minutes.
+          </div>
+        </Card>
+      </section>
+    </main>
+  );
+}low" />
             {loading ? "Getting token…" : "Get token"}
             <ArrowRight size={15} />
           </BtnPrimary>
@@ -873,35 +921,38 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
   const copyDoctor  = () => { navigator.clipboard?.writeText(doctorUrl); notify("Doctor link copied"); };
 
   return (
-    <main className="mx-auto max-w-7xl px-5 py-7 sm:px-6 sm:py-9 animate-fade-in">
+    <main className="mx-auto max-w-7xl px-5 py-8 sm:px-6 sm:py-10 [animation:var(--animate-fade-in)]">
       {/* Top bar */}
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-bold text-emerald">
-            <LiveDot /> SESSION LIVE · 6:00 PM
+          <div className="mb-2.5 inline-flex items-center gap-2 rounded-full border border-emerald-light bg-emerald-xlight px-3 py-1 text-[11px] font-bold text-emerald-text">
+            <LiveDot /> SESSION LIVE
           </div>
           <h1 className="text-3xl font-black tracking-[-.04em] text-ink sm:text-4xl">Good evening, Doctor.</h1>
           <p className="mt-1.5 text-sm text-slate-soft">
-            Your queue is in your hands. {waiting.length} patients are waiting.
+            Your queue is active — <span className="font-semibold text-ink">{waiting.length} patient{waiting.length !== 1 ? "s" : ""}</span> waiting.
           </p>
         </div>
-        <BtnGhost onClick={onLogout} className="!px-4 !py-2 !text-xs">Sign out</BtnGhost>
+        <BtnGhost onClick={onLogout} className="!px-4 !py-2.5 !text-xs">
+          <X size={13} /> Sign out
+        </BtnGhost>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.25fr_.75fr]">
+      <div className="grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
         {/* Left column */}
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Current token hero */}
-          <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-ink via-ink to-ink-soft p-6 text-white shadow-card sm:p-8">
-            <div className="absolute -right-16 -top-24 h-56 w-56 rounded-full bg-emerald/15 blur-3xl" />
+          <div className="relative overflow-hidden rounded-[1.8rem] bg-gradient-to-br from-ink via-ink-soft to-ink-xsoft p-6 text-white shadow-card sm:p-8">
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald/12 blur-3xl" />
+            <div className="absolute -bottom-16 -left-10 h-48 w-48 rounded-full bg-blue-500/8 blur-3xl" />
             <div className="mb-6 flex items-start justify-between">
               <div className="relative">
-                <p className="text-[11px] font-bold uppercase tracking-[.18em] text-emerald-glow">Currently serving</p>
+                <p className="text-[10px] font-bold uppercase tracking-[.22em] text-emerald-glow">Currently serving</p>
                 <div className="mt-3 flex items-end gap-4">
                   <span className="text-8xl font-black leading-none tracking-tight">{called ? tokenLabel(called.tokenNumber) : "—"}</span>
                 </div>
               </div>
-              <div className="relative rounded-xl bg-ink-soft p-2.5 text-emerald-glow">
+              <div className="relative rounded-2xl bg-white/8 p-3 text-emerald-glow ring-1 ring-white/10 backdrop-blur-sm">
                 <Activity size={20} />
               </div>
             </div>
@@ -916,7 +967,7 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
           {/* Action buttons */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <ActionBtn
-              icon={<Send size={20} />}
+              icon={<Send size={19} />}
               label="Call current"
               badge="Speaker"
               accent="blue"
@@ -932,7 +983,7 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
               onClick={() => safe(() => queueStore.next(), waiting[0] ? `Token ${tokenLabel(waiting[0].tokenNumber)} called` : "Next patient called")}
             />
             <ActionBtn
-              icon={<SkipForward size={20} />}
+              icon={<SkipForward size={19} />}
               label="Skip current"
               badge="Skip"
               accent="amber"
@@ -940,7 +991,7 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
               disabled={!called}
             />
             <ActionBtn
-              icon={<RefreshCw size={20} />}
+              icon={<RefreshCw size={19} />}
               label="Recall skipped"
               badge="Recall"
               accent="purple"
@@ -1059,7 +1110,7 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
                   href={doctorUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-dark bg-emerald px-3 py-2 text-xs font-bold text-white transition-all hover:bg-emerald-dark active:scale-[.98]"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-emerald-dark bg-emerald px-3 py-2 text-xs font-bold text-white transition-all hover:bg-emerald-dark active:scale-[.97]"
                 >
                   <ArrowRight size={13} /> Open panel
                 </a>
@@ -1068,11 +1119,11 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
           </Card>
 
           {/* Session controls */}
-          <Card className="p-6 transition-shadow duration-200 hover:shadow-card-hover">
-            <div className="mb-4 flex items-center justify-between">
+          <Card className="overflow-hidden transition-shadow duration-200 hover:shadow-card-hover">
+            <div className="flex items-center justify-between border-b border-border/50 px-6 py-5">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Session controls</p>
-                <p className="mt-1.5 font-black text-ink">
+                <p className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-muted">Session controls</p>
+                <p className="mt-1 font-black text-ink">
                   {state.acceptingTokens ? "Accepting new tokens" : "No new tokens"}
                 </p>
               </div>
@@ -1080,19 +1131,21 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
                 {state.status.toUpperCase()}
               </Badge>
             </div>
-            <BtnDanger
-              onClick={() => safe(() => queueStore.endSession(), "Session ended")}
-              disabled={state.status !== "open"}
-              className="mb-3 w-full"
-            >
-              <X size={15} /> End session
-            </BtnDanger>
-            <BtnSubtle
-              onClick={() => { queueStore.resetDemo(); notify("Demo queue reset"); }}
-              className="w-full"
-            >
-              <RefreshCw size={13} /> Reset demo queue
-            </BtnSubtle>
+            <div className="space-y-2.5 p-5">
+              <BtnDanger
+                onClick={() => safe(() => queueStore.endSession(), "Session ended")}
+                disabled={state.status !== "open"}
+                className="w-full"
+              >
+                <X size={15} /> End session
+              </BtnDanger>
+              <BtnSubtle
+                onClick={() => { queueStore.resetDemo(); notify("Demo queue reset"); }}
+                className="w-full"
+              >
+                <RefreshCw size={13} /> Reset demo queue
+              </BtnSubtle>
+            </div>
           </Card>
 
           <ActivityFeed state={state} />
@@ -1101,15 +1154,18 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
 
       {/* Toast */}
       {toast && (
-        <div role="status" className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white shadow-2xl animate-slide-up">
-          <Check size={15} className="text-emerald-glow" /> {toast}
+        <div role="status" className="fixed bottom-6 left-1/2 z-50 flex items-center gap-2.5 rounded-2xl bg-ink/95 px-5 py-3.5 text-sm font-bold text-white shadow-2xl backdrop-blur-md [animation:var(--animate-toast-in)]" style={{ transform: "translateX(-50%)" }}>
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-emerald text-white">
+            <Check size={13} strokeWidth={3} />
+          </span>
+          {toast}
         </div>
       )}
     </main>
   );
 }
 
-/* ─── Action button (dashboard) ─────────────────── */
+/* ─── Action button (dashboard) ──────────────────── */
 function ActionBtn({
   icon, label, badge, accent, primary, onClick, disabled,
 }: {
@@ -1118,10 +1174,10 @@ function ActionBtn({
   primary?: boolean; onClick: () => void; disabled?: boolean;
 }) {
   const accentMap = {
-    blue:    { iconWrap: "bg-blue-100 text-blue-600",    badge: "bg-blue-100 text-blue-700" },
-    emerald: { iconWrap: "bg-emerald-dark text-white",    badge: "bg-emerald-dark text-white" },
-    amber:   { iconWrap: "bg-amber-100 text-amber-600", badge: "bg-amber-100 text-amber-700" },
-    purple:  { iconWrap: "bg-violet-100 text-violet-600", badge: "bg-violet-100 text-violet-700" },
+    blue:    { iconWrap: "bg-blue-100 text-blue-600",       badge: "bg-blue-100 text-blue-700" },
+    emerald: { iconWrap: "bg-emerald-dark text-white",       badge: "bg-emerald-dark text-white" },
+    amber:   { iconWrap: "bg-amber-100 text-amber-600",      badge: "bg-amber-100 text-amber-700" },
+    purple:  { iconWrap: "bg-violet-100 text-violet-600",    badge: "bg-violet-100 text-violet-700" },
   };
   const { iconWrap, badge: badgeCls } = accentMap[accent];
 
@@ -1130,66 +1186,52 @@ function ActionBtn({
       onClick={onClick}
       disabled={disabled}
       className={[
-        "flex min-h-32 flex-col items-start justify-between gap-6 rounded-[1.25rem] p-4 text-left w-full",
-        "transition-all duration-200 active:scale-[.985] focus-visible:outline-none",
-        "disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none",
+        "flex min-h-36 flex-col items-start justify-between gap-5 rounded-[1.4rem] p-4 text-left w-full",
+        "transition-all duration-200 active:scale-[.975] focus-visible:outline-none",
+        "disabled:cursor-not-allowed disabled:opacity-35 disabled:pointer-events-none",
         primary
-          ? "bg-gradient-to-br from-emerald to-emerald-dark border border-emerald-dark text-white shadow-btn-emerald hover:-translate-y-0.5 hover:shadow-btn-emerald-lg"
-          : "bg-white border border-border text-ink shadow-sm hover:-translate-y-0.5 hover:border-slate-200 hover:bg-slate-50 hover:shadow-card",
+          ? "bg-gradient-to-br from-emerald to-emerald-dark text-white shadow-btn-emerald hover:-translate-y-1 hover:shadow-btn-emerald-lg"
+          : "bg-white border border-border/60 text-ink shadow-card hover:-translate-y-1 hover:border-slate-200 hover:shadow-card-hover",
       ].join(" ")}
     >
       {/* Top row: icon chip + badge */}
       <span className="flex w-full items-start justify-between">
         <span className={`grid h-10 w-10 place-items-center rounded-xl ${iconWrap}`}>
-          {icon}
-        </span>
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${primary ? "bg-emerald-dark text-white" : badgeCls}`}>
-          {badge}
-        </span>
-      </span>
-      {/* Label */}
-      <span className={`text-sm font-bold leading-tight ${primary ? "text-white" : "text-ink"}`}>{label}</span>
-    </button>
-  );
-}
-
-/* ─── Dashboard metric (inside dark hero) ───────── */
-function DashMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-white/5 bg-ink-soft p-3">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-white/35">{label}</p>
-      <p className="mt-1 text-lg font-black text-white">{value}</p>
-    </div>
-  );
-}
-
-/* ─── Queue table ───────────────────────────────── */
+/* ─── Queue table ─────────────────────────────── */
 function QueueTable({ state, onRecall }: { state: QueueState; onRecall: (id: string) => void }) {
   const entries = [...state.entries]
     .filter(e => ["waiting", "skipped"].includes(e.status))
     .sort((a, b) => Number(b.priority) - Number(a.priority) || a.tokenNumber - b.tokenNumber);
 
   return (
-    <Card className="p-6 transition-shadow duration-200 hover:shadow-card-hover">
-      <div className="mb-5 flex items-center justify-between">
+    <Card className="overflow-hidden transition-shadow duration-200 hover:shadow-card-hover">
+      <div className="flex items-center justify-between border-b border-border/50 px-6 py-5">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Up next</p>
-          <h2 className="mt-1.5 text-xl font-black text-ink">Live patient queue</h2>
+          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-muted">Up next</p>
+          <h2 className="mt-1 text-xl font-black text-ink">Live patient queue</h2>
         </div>
         <Badge variant="slate">{entries.length} active</Badge>
       </div>
 
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-border/40">
         {entries.length === 0
-          ? <div className="py-12 text-center"><div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-emerald-xlight text-emerald"><Users size={19} /></div><p className="text-sm font-bold text-ink">Queue is clear</p><p className="mt-1 text-xs text-slate-muted">New patient tokens will appear here live.</p></div>
+          ? (
+            <div className="py-14 text-center">
+              <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-emerald-xlight text-emerald">
+                <Users size={20} />
+              </div>
+              <p className="text-sm font-bold text-ink">Queue is clear</p>
+              <p className="mt-1 text-xs text-slate-muted">New patient tokens will appear here live.</p>
+            </div>
+          )
           : entries.slice(0, 8).map((entry, idx) => (
-            <div key={entry.id} className="flex items-center gap-3 rounded-xl px-2 py-4 transition-colors duration-150 hover:bg-mist">
+            <div key={entry.id} className="flex items-center gap-3.5 px-5 py-4 transition-colors duration-150 hover:bg-mist/60">
               <div className={[
-                "grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black",
+                "grid h-10 w-10 shrink-0 place-items-center rounded-xl text-sm font-black",
                 entry.status === "skipped"
-                  ? "bg-amber-50 text-amber-600"
+                  ? "bg-amber-50 text-amber-600 ring-1 ring-amber-100"
                   : idx === 0
-                    ? "bg-emerald-light text-emerald-text"
+                    ? "bg-emerald-xlight text-emerald ring-1 ring-emerald-light"
                     : "bg-slate-100 text-slate-600",
               ].join(" ")}>
                 {tokenLabel(entry.tokenNumber)}
@@ -1201,8 +1243,8 @@ function QueueTable({ state, onRecall }: { state: QueueState; onRecall: (id: str
                 </p>
               </div>
               {entry.status === "skipped"
-                ? <BtnGhost onClick={() => onRecall(entry.id)} className="!px-3 !py-1.5 !text-xs">Recall</BtnGhost>
-                : <span className="text-xs font-semibold text-slate-faint">···{entry.phone?.slice(-4) ?? "—"}</span>
+                ? <BtnGhost onClick={() => onRecall(entry.id)} className="!px-3.5 !py-2 !text-xs">Recall</BtnGhost>
+                : <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-muted">···{entry.phone?.slice(-4) ?? "—"}</span>
               }
             </div>
           ))
@@ -1210,19 +1252,42 @@ function QueueTable({ state, onRecall }: { state: QueueState; onRecall: (id: str
       </div>
     </Card>
   );
-}
-
-/* ─── Activity feed ─────────────────────────────── */
+}-t/* ─── Activity feed ────────────────────────────── */
 function ActivityFeed({ state }: { state: QueueState }) {
   const dotCls = (tone: string) => ({
-    green: "bg-emerald",
-    amber: "bg-amber-400",
-    blue:  "bg-blue-400",
-    slate: "bg-slate-300",
-  })[tone] ?? "bg-slate-300";
+    green: "bg-emerald ring-4 ring-emerald-xlight",
+    amber: "bg-amber-400 ring-4 ring-amber-50",
+    blue:  "bg-blue-400 ring-4 ring-blue-50",
+    slate: "bg-slate-300 ring-4 ring-slate-100",
+  })[tone] ?? "bg-slate-300 ring-4 ring-slate-100";
 
   return (
-    <Card className="p-6 transition-shadow duration-200 hover:shadow-card-hover">
+    <Card className="overflow-hidden transition-shadow duration-200 hover:shadow-card-hover">
+      <div className="flex items-center justify-between border-b border-border/50 px-6 py-5">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-muted">Activity</p>
+          <h2 className="mt-1 font-black text-ink">Recent updates</h2>
+        </div>
+        <History size={16} className="text-slate-faint" />
+      </div>
+      <div className="space-y-4 p-6">
+        {state.activity.slice(0, 5).map(item => (
+          <div key={item.id} className="flex gap-3.5">
+            <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${dotCls(item.tone)}`} />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-600">{item.label}</p>
+              <p className="truncate text-[11px] text-slate-muted">
+                {item.detail} · {formatRelativeTime(item.time)}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+export default App;ow-card-hover">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Activity</p>
