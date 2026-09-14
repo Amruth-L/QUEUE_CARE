@@ -126,6 +126,16 @@ async function handleApi(request, response, pathname) {
       otpChallenges.delete(input.challengeId);
       return sendJson(response, 200, { token, doctor: { phone: challenge.phone, name: "Doctor" } });
     }
+    if (request.method === "POST" && pathname === "/api/demo/reset") {
+      queue.entries = [];
+      queue.nextTokenNumber = 1;
+      queue.nextEntryId = 1;
+      queue.status = "open";
+      queue.acceptingTokens = true;
+      activity = [{ id: `reset-${Date.now()}`, label: "Queue reset", detail: "Demo session restarted", time: new Date().toISOString(), tone: "green" }];
+      broadcast();
+      return sendJson(response, 200, clientState(authorized(request)));
+    }
     if (pathname.startsWith("/api/action/") && !authorized(request)) return sendJson(response, 401, { error: "Doctor authentication required" });
     if (request.method === "POST" && pathname === "/api/join") {
       if (input.clinicId && input.clinicId !== clinicId) return sendJson(response, 404, { error: "This clinic queue is not available." });

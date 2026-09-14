@@ -192,6 +192,12 @@ function App() {
   useEffect(() => {
     const onPop = () => {
       const current = new URLSearchParams(window.location.search);
+      // If the user navigated back while on the patient token view,
+      // clear the stored entry so the join form shows again.
+      if (current.has("join") && sessionStorage.getItem("queuecare-patient-entry-back")) {
+        sessionStorage.removeItem("queuecare-patient-entry");
+        sessionStorage.removeItem("queuecare-patient-entry-back");
+      }
       setRoute(current.has("join") ? "patient" : current.has("doctor") ? "doctor" : "home");
     };
     window.addEventListener("popstate", onPop);
@@ -203,7 +209,7 @@ function App() {
       {route !== "patient" && <Header route={route} navigate={navigate} />}
       <div className="animate-fade-in">
         {route === "home" && <Home navigate={navigate} state={state} />}
-        {route === "patient" && <PatientJoin state={state} />}
+        {route === "patient" && <PatientJoin state={state} navigate={navigate} />}
         {route === "doctor" && (
           doctorAuthenticated
             ? <DoctorDashboard
@@ -251,7 +257,7 @@ function Header({ route, navigate }: { route: string; navigate: (route: string) 
         </div>
 
         <BtnGhost
-          onClick={() => navigate(route === "doctor" ? "home" : "doctor")}
+          onClick={() => navigate(route === "doctor" ? "patient" : "doctor")}
           className="!px-3.5 !py-2 !text-xs !font-semibold sm:!px-4"
         >
           <Stethoscope size={13} />
@@ -371,34 +377,107 @@ function Feature({ icon, title, text }: { icon: ReactNode; title: string; text: 
       <p className="mt-2 text-sm leading-6 text-slate-soft">{text}</p>
     </Card>
   );
-}1 /* ─── Patient Join ─────────────────────────────── */
-function PatientJoin({ state }: { state: QueueState }) {
+}
+
+/* ─── Patient Join ─────────────────────────────── */
+function PatientJoin({ state, navigate }: { state: QueueState; navigate: (r: string) => void }) {
   const [phone, setPhone] = useState("");
-  const [entryId, setEntryId] = useState(() => sessionStorage.getItem("queuecare-patient-entry") ?? "");
   const [error, setError] = useState("");
+  const [completedNotice, setCompletedNotice] = useState<QueueEntry | null>(null);
   const [loading, setLoading] = useState(false);
   const clinicId = new URLSearchParams(window.location.search).get("join") ?? "clinic-demo";
-  const existingEntry = state.entries.find(entry => entry.id === entryId) ?? null;
+
+  // Stored entry
+  const [entryId, setEntryId] = useState(() => sessionStorage.getItem("queuecare-patient-entry") ?? "");
+  const existingEntry = state.entries.find(e => e.id === entryId) ?? null;
+
+  // Browser back button handler: if user was viewing token and hits browser Back, return to join form
+  useEffect(() => {
+    const onPop = () => {
+      if (entryId) {
+        setEntryId("");
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [entryId]);
 
   const join = async () => {
     setError("");
+    setCompletedNotice(null);
+    const normalized = phone.replace(/[^\d+]/g, "");
+    if (!/^\+?\d{10,15}$/.test(normalized)) {
+      setError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    // 1. If this phone ALREADY has an active token in the queue, immediately display it!
+    const activeExisting = state.entries.find(
+      e => e.phone === normalized && (e.status === "waiting" || e.status === "called")
+    );
+    if (activeExisting) {
+      sessionStorage.setItem("queuecare-patient-entry", activeExisting.id);
+      window.history.pushState({ tokenView: true, id: activeExisting.id }, "", window.location.href);
+      setEntryId(activeExisting.id);
+      return;
+    }
+
+    // 2. If this phone was already completed or skipped in this session:
+    const pastExisting = state.entries.find(
+      e => e.phone === normalized && (e.status === "completed" || e.status === "skipped")
+    );
+    if (pastExisting) {
+      setCompletedNotice(pastExisting);
+      return;
+    }
+
     setLoading(true);
     try {
-      const entry = await queueStore.join({ phone, clinicId });
+      const entry = await queueStore.join({ phone: normalized, clinicId });
       sessionStorage.setItem("queuecare-patient-entry", entry.id);
+      window.history.pushState({ tokenView: true, id: entry.id }, "", window.location.href);
       setEntryId(entry.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not join the queue.");
+      const msg = err instanceof Error ? err.message : "Could not join the queue.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  if (existingEntry) return <PatientToken entry={existingEntry} state={state} onRequestAnother={() => setEntryId("")} />;
+  const handleLeaveQueue = () => {
+    sessionStorage.removeItem("queuecare-patient-entry");
+    sessionStorage.removeItem("queuecare-patient-entry-back");
+    setEntryId("");
+  };
+
+  const handleBackToJoin = () => {
+    setEntryId("");
+  };
+
+  if (existingEntry) {
+    return (
+      <PatientToken
+        entry={existingEntry}
+        state={state}
+        onBack={handleBackToJoin}
+        onLeave={handleLeaveQueue}
+        onRequestAnother={handleBackToJoin}
+      />
+    );
+  }
 
   return (
     <main className="patient-canvas mx-auto flex min-h-screen max-w-md items-center px-5 py-10 sm:px-6 [animation:var(--animate-fade-in)]">
       <section className="w-full">
+        {/* Back to home */}
+        <button
+          onClick={() => navigate("home")}
+          className="mb-6 flex items-center gap-1.5 text-xs font-semibold text-slate-muted transition hover:text-ink"
+        >
+          <ArrowLeft size={14} /> Back to home
+        </button>
+
         {/* Icon + branding */}
         <div className="mb-8 text-center">
           <div className="relative mx-auto mb-6 w-fit">
@@ -421,7 +500,11 @@ function PatientJoin({ state }: { state: QueueState }) {
               <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-muted" />
               <Input
                 value={phone}
-                onChange={e => setPhone(e.target.value)}
+                onChange={e => {
+                  setPhone(e.target.value);
+                  if (error) setError("");
+                  if (completedNotice) setCompletedNotice(null);
+                }}
                 onKeyDown={e => e.key === "Enter" && !loading && phone.trim() && join()}
                 placeholder="98765 43210"
                 type="tel"
@@ -431,9 +514,61 @@ function PatientJoin({ state }: { state: QueueState }) {
               />
             </div>
 
+            {completedNotice && (
+              <div role="alert" className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs">
+                <div className="flex items-start gap-2 text-amber-900 font-semibold mb-2">
+                  <Info size={16} className="shrink-0 mt-0.5 text-amber-700" />
+                  <span>
+                    Token A{completedNotice.tokenNumber} for this number is already{" "}
+                    <span className="font-bold">{completedNotice.status}</span>.
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sessionStorage.setItem("queuecare-patient-entry", completedNotice.id);
+                      setEntryId(completedNotice.id);
+                    }}
+                    className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow hover:bg-amber-700 transition"
+                  >
+                    View Token A{completedNotice.tokenNumber}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      queueStore.resetDemo();
+                      setCompletedNotice(null);
+                      setPhone("");
+                      setError("");
+                    }}
+                    className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 transition"
+                  >
+                    Reset demo queue
+                  </button>
+                </div>
+              </div>
+            )}
+
             {error && (
               <div role="alert" className="mb-5 flex gap-2.5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3.5 text-sm font-semibold leading-5 text-red-700">
-                <Info size={17} className="mt-0.5 shrink-0" />{error}
+                <Info size={17} className="mt-0.5 shrink-0" />
+                <div className="space-y-1">
+                  <p>{error}</p>
+                  {error.includes("no longer active") && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        queueStore.resetDemo();
+                        setError("");
+                        setPhone("");
+                      }}
+                      className="mt-2 inline-block text-xs font-bold underline hover:opacity-80"
+                    >
+                      Reset demo queue to test again
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
@@ -445,18 +580,8 @@ function PatientJoin({ state }: { state: QueueState }) {
           </div>
 
           <div className="border-t border-border/60 bg-mist px-5 py-3.5 text-center text-[11px] leading-5 text-slate-muted">
-            Need a token for a family member? Scan again after 5 minutes.
+            Need a token for a family member? Scan again after 5 minutes.
           </div>
-        </Card>
-      </section>
-    </main>
-  );
-}low" />
-            {loading ? "Getting token…" : "Get token"}
-            <ArrowRight size={15} />
-          </BtnPrimary>
-
-          <p className="mt-4 text-center text-[11px] leading-5 text-slate-muted">Need a token for a family member? Scan again after 5 minutes while your first token is still active.</p>
         </Card>
       </section>
     </main>
@@ -631,7 +756,12 @@ function QueueStatusCard({ liveEntry, state }: { liveEntry: QueueEntry; state: Q
 }
 
 /* ─── Patient Token ─────────────────────────────── */
-function PatientToken({ entry, state, onRequestAnother }: { entry: QueueEntry; state: QueueState; onRequestAnother: () => void }) {
+function PatientToken({ entry, state, onBack, onLeave, onRequestAnother }: {
+  entry: QueueEntry; state: QueueState;
+  onBack: () => void;
+  onLeave: () => void;
+  onRequestAnother: () => void;
+}) {
   const liveEntry = state.entries.find(i => i.id === entry.id) ?? entry;
   const called = liveEntry.status === "called";
   const skipped = liveEntry.status === "skipped";
@@ -640,20 +770,28 @@ function PatientToken({ entry, state, onRequestAnother }: { entry: QueueEntry; s
   return (
     <main className="patient-canvas mx-auto flex min-h-screen max-w-md items-start justify-center px-5 py-8 sm:px-6 animate-fade-in">
       <section className="w-full pt-4">
-        {/* Clinic brand */}
-        <div className="mb-6 flex items-center justify-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-ink to-ink-soft text-emerald-glow shadow-btn">
-            <HeartPulse size={16} />
-          </span>
-          <span>
-            <span className="block text-sm font-extrabold text-ink">{state.clinicName}</span>
-            <span className="block text-[10px] font-medium text-slate-muted">virtual waiting room</span>
-          </span>
+        {/* Top bar with back button + clinic brand */}
+        <div className="mb-6 flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 rounded-xl border border-border/70 bg-white/70 px-3 py-1.5 text-xs font-semibold text-slate-muted shadow-sm transition hover:bg-white hover:text-ink"
+          >
+            <ArrowLeft size={14} /> Back
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-ink to-ink-soft text-emerald-glow shadow-btn">
+              <HeartPulse size={13} />
+            </span>
+            <span>
+              <span className="block text-xs font-extrabold text-ink">{state.clinicName}</span>
+              <span className="block text-[9px] font-medium text-slate-muted">virtual waiting room</span>
+            </span>
+          </div>
         </div>
 
         {/* Called alert banner */}
         {called && (
-          <div className="mb-5 flex items-center gap-3 rounded-xl border border-emerald-light bg-emerald-xlight px-4 py-3.5">
+          <div className="mb-5 flex items-center gap-3 rounded-2xl border border-emerald-light bg-emerald-xlight px-4 py-3.5">
             <Bell size={18} className="shrink-0 text-emerald" />
             <p className="text-sm font-bold text-emerald-text">Token {tokenLabel(liveEntry.tokenNumber)} called — please proceed to the consultation room now.</p>
           </div>
@@ -665,13 +803,30 @@ function PatientToken({ entry, state, onRequestAnother }: { entry: QueueEntry; s
         <p className="mt-5 text-center text-[11px] leading-5 text-slate-muted">
           We'll also alert you on WhatsApp as your turn approaches.
         </p>
+
+        {completed && (
+          <div className="mt-6 flex flex-col items-center gap-2.5">
+            <BtnPrimary onClick={onLeave} className="w-full">
+              <Check size={16} /> Consultation complete · Done
+            </BtnPrimary>
+          </div>
+        )}
+
         {!completed && !skipped && (
-          <button
-            onClick={onRequestAnother}
-            className="mx-auto mt-4 block text-xs font-bold text-emerald underline-offset-4 hover:underline"
-          >
-            Get a token for a family member
-          </button>
+          <div className="mt-5 space-y-2.5 text-center">
+            <button
+              onClick={onRequestAnother}
+              className="mx-auto block text-xs font-bold text-emerald underline-offset-4 hover:underline"
+            >
+              Get a token for a family member
+            </button>
+            <button
+              onClick={onLeave}
+              className="text-[11px] font-semibold text-slate-muted transition hover:text-red-600"
+            >
+              Leave queue / cancel token
+            </button>
+          </div>
         )}
       </section>
     </main>
@@ -874,7 +1029,7 @@ function StatCard({ label, value, icon, tone }: {
 }
 
 /* ─── Doctor Dashboard ──────────────────────────── */
-function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
+function DoctorDashboard({ state, navigate, onLogout }: {
   state: QueueState; navigate: (route: string) => void; onLogout: () => void;
 }) {
   const [qr, setQr] = useState("");
@@ -1049,14 +1204,13 @@ function DoctorDashboard({ state, navigate: _navigate, onLogout }: {
                 <BtnGhost onClick={copyPatient} className="!px-3 !py-2 !text-xs">
                   <Copy size={13} /> Copy link
                 </BtnGhost>
-                <a
-                  href={joinUrl}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={() => navigate("patient")}
                   className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-ink/15 bg-ink px-3 py-2 text-xs font-bold text-white transition-all hover:bg-ink-soft active:scale-[.98]"
                 >
                   <ArrowRight size={13} /> Test join
-                </a>
+                </button>
               </div>
             </div>
           </Card>
@@ -1197,6 +1351,28 @@ function ActionBtn({
       {/* Top row: icon chip + badge */}
       <span className="flex w-full items-start justify-between">
         <span className={`grid h-10 w-10 place-items-center rounded-xl ${iconWrap}`}>
+          {icon}
+        </span>
+        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${primary ? "bg-white/15 text-white" : badgeCls}`}>
+          {badge}
+        </span>
+      </span>
+      {/* Label */}
+      <span className={`text-sm font-bold leading-tight ${primary ? "text-white" : "text-ink"}`}>{label}</span>
+    </button>
+  );
+}
+
+/* ─── Dashboard metric (inside dark hero) ─────────── */
+function DashMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/8 bg-white/6 p-3.5 backdrop-blur-sm">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">{label}</p>
+      <p className="mt-1 text-xl font-black text-white">{value}</p>
+    </div>
+  );
+}
+
 /* ─── Queue table ─────────────────────────────── */
 function QueueTable({ state, onRecall }: { state: QueueState; onRecall: (id: string) => void }) {
   const entries = [...state.entries]
@@ -1252,7 +1428,9 @@ function QueueTable({ state, onRecall }: { state: QueueState; onRecall: (id: str
       </div>
     </Card>
   );
-}-t/* ─── Activity feed ────────────────────────────── */
+}
+
+/* ─── Activity feed ────────────────────────────── */
 function ActivityFeed({ state }: { state: QueueState }) {
   const dotCls = (tone: string) => ({
     green: "bg-emerald ring-4 ring-emerald-xlight",
@@ -1274,31 +1452,6 @@ function ActivityFeed({ state }: { state: QueueState }) {
         {state.activity.slice(0, 5).map(item => (
           <div key={item.id} className="flex gap-3.5">
             <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${dotCls(item.tone)}`} />
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-slate-600">{item.label}</p>
-              <p className="truncate text-[11px] text-slate-muted">
-                {item.detail} · {formatRelativeTime(item.time)}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </Card>
-  );
-}
-
-export default App;ow-card-hover">
-      <div className="mb-5 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[.15em] text-slate-muted">Activity</p>
-          <h2 className="mt-1.5 font-black text-ink">Recent updates</h2>
-        </div>
-        <History size={17} className="text-slate-faint" />
-      </div>
-      <div className="space-y-4">
-        {state.activity.slice(0, 5).map(item => (
-          <div key={item.id} className="flex gap-3">
-            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotCls(item.tone)}`} />
             <div className="min-w-0">
               <p className="text-xs font-bold text-slate-600">{item.label}</p>
               <p className="truncate text-[11px] text-slate-muted">

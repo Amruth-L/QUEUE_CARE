@@ -159,13 +159,30 @@ export const queueStore = {
     if (state.status !== "open") throw new Error("The session is not open.");
     const current = state.entries.find(entry => entry.status === "called");
     const nextCandidate = orderedEntries(state).find(entry => entry.status === "waiting");
-    if (!nextCandidate) return;
-    let next = { ...state, entries: state.entries.map(entry => entry.id === current?.id ? { ...entry, status: "completed" as const, updatedAt: now() } : entry) };
-    next = { ...next, entries: next.entries.map(entry => entry.id === nextCandidate.id ? { ...entry, status: "called" as const, updatedAt: now() } : entry) };
-    const notification: NotificationRecord = { id: `${next.sessionId}:${nextCandidate.id}:called`, entryId: nextCandidate.id, type: "called", status: "sent", message: notificationCopy.called, createdAt: now() };
-    next = { ...next, notifications: next.notifications.some(item => item.id === notification.id) ? next.notifications : [...next.notifications, notification] };
-    next = sendNewNotifications(next);
-    next = { ...next, activity: addActivity(next, `Token A${nextCandidate.tokenNumber} called`, nextCandidate.patientName ?? "Patient called", "green") };
+    if (!current && !nextCandidate) return;
+
+    let next = state;
+    if (current) {
+      next = {
+        ...next,
+        entries: next.entries.map(entry =>
+          entry.id === current.id ? { ...entry, status: "completed" as const, updatedAt: now() } : entry
+        ),
+        activity: addActivity(next, `Token A${current.tokenNumber} completed`, "Consultation completed", "slate")
+      };
+    }
+    if (nextCandidate) {
+      next = {
+        ...next,
+        entries: next.entries.map(entry =>
+          entry.id === nextCandidate.id ? { ...entry, status: "called" as const, updatedAt: now() } : entry
+        )
+      };
+      const notification: NotificationRecord = { id: `${next.sessionId}:${nextCandidate.id}:called`, entryId: nextCandidate.id, type: "called", status: "sent", message: notificationCopy.called, createdAt: now() };
+      next = { ...next, notifications: next.notifications.some(item => item.id === notification.id) ? next.notifications : [...next.notifications, notification] };
+      next = sendNewNotifications(next);
+      next = { ...next, activity: addActivity(next, `Token A${nextCandidate.tokenNumber} called`, nextCandidate.patientName ?? "Patient called", "green") };
+    }
     publish(next);
   },
   async call() {
@@ -204,6 +221,11 @@ export const queueStore = {
     publish({ ...state, status: "ended", acceptingTokens: false, activity: addActivity(state, "Session ended", "No more tokens can be generated", "slate") });
   },
   resetDemo() {
+    if (serverMode) {
+      void fetch("/api/demo/reset", { method: "POST" }).catch(() => {});
+    }
+    sessionStorage.removeItem("queuecare-patient-entry");
+    sessionStorage.removeItem("queuecare-patient-entry-back");
     publish(initialState());
   },
   refreshServerConnection() {
