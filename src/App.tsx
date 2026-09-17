@@ -31,10 +31,120 @@ import { aheadFor, currentToken, formatRelativeTime, queueStore, tokenLabel } fr
 
 const useQueue = () => useSyncExternalStore(queueStore.subscribe, queueStore.getState, queueStore.getState);
 
+/* ─── QueueCare Brand Logo Component ───────────────── */
+function QueueCareLogo({
+  size = "md",
+  showSubtitle = true,
+  light = false,
+}: {
+  size?: "sm" | "md" | "lg" | "xl";
+  showSubtitle?: boolean;
+  light?: boolean;
+}) {
+  const iconSizes = {
+    sm: "h-7 w-7 rounded-lg",
+    md: "h-9 w-9 rounded-xl",
+    lg: "h-12 w-12 rounded-2xl",
+    xl: "h-16 w-16 rounded-3xl",
+  };
+  const svgSizes = {
+    sm: 16,
+    md: 20,
+    lg: 26,
+    xl: 34,
+  };
+  const titleSizes = {
+    sm: "text-xs",
+    md: "text-[14px]",
+    lg: "text-lg",
+    xl: "text-2xl",
+  };
+
+  return (
+    <div className="flex items-center gap-3">
+      {/* Red medical shield mark */}
+      <div
+        className={`relative grid place-items-center bg-gradient-to-br from-red-500 via-red-600 to-red-700 shadow-md shadow-red-500/25 ring-1 ring-white/20 transition-transform duration-200 hover:scale-105 shrink-0 ${iconSizes[size]}`}
+      >
+        <svg
+          width={svgSizes[size]}
+          height={svgSizes[size]}
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="text-white drop-shadow-xs"
+        >
+          {/* Medical Cross in Crisp White */}
+          <path
+            d="M9 3.5C9 2.67 9.67 2 10.5 2H13.5C14.33 2 15 2.67 15 3.5V8.5H20.5C21.33 8.5 22 9.17 22 10V14C22 14.83 21.33 15.5 20.5 15.5H15V20.5C15 21.33 14.33 22 13.5 22H10.5C9.67 22 9 21.33 9 20.5V15.5H3.5C2.67 15.5 2 14.83 2 14V10C2 9.17 2.67 8.5 3.5 8.5H9V3.5Z"
+            fill="currentColor"
+            opacity="0.96"
+          />
+          {/* Center EKG pulse line */}
+          <path
+            d="M3.5 12H7.5L9.5 7.5L13 16.5L15 10.5L16.5 12H20.5"
+            stroke="#b91c1c"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+
+      <div>
+        <span className={`block font-black tracking-tight ${titleSizes[size]} ${light ? "text-white" : "text-ink"}`}>
+          Queue<span className="text-red-600">Care</span>
+        </span>
+        {showSubtitle && (
+          <span className={`block text-[9.5px] font-bold tracking-wider uppercase ${light ? "text-red-200" : "text-slate-muted"}`}>
+            Virtual Waiting Room
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Shared primitive components ───────────────── */
 
-/** Primary CTA button — dark navy fill */
+/** Primary CTA button — vibrant medical red gradient */
 function BtnPrimary({
+  onClick, disabled, children, className = "",
+}: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 via-rose-600 to-red-700 px-6 py-4 text-sm font-bold tracking-wide text-white shadow-btn-red transition-all duration-200
+        hover:-translate-y-0.5 hover:shadow-btn-red-lg active:translate-y-0 active:scale-[.975]
+        focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+        ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Accent button — matches primary medical red */
+function BtnAccent({
+  onClick, disabled, children, className = "",
+}: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 via-rose-600 to-red-700 px-6 py-4 text-sm font-bold tracking-wide text-white shadow-btn-red transition-all duration-200
+        hover:-translate-y-0.5 hover:shadow-btn-red-lg active:translate-y-0 active:scale-[.975]
+        focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
+        ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Dark / secondary solid button */
+function BtnDark({
   onClick, disabled, children, className = "",
 }: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
   return (
@@ -51,24 +161,6 @@ function BtnPrimary({
   );
 }
 
-/** Accent button */
-function BtnAccent({
-  onClick, disabled, children, className = "",
-}: { onClick?: () => void; disabled?: boolean; children: ReactNode; className?: string }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald to-emerald-dark px-6 py-4 text-sm font-bold tracking-wide text-white shadow-btn-emerald transition-all duration-200
-        hover:-translate-y-0.5 hover:shadow-btn-emerald-lg active:translate-y-0 active:scale-[.975]
-        focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
-        ${className}`}
-    >
-      {children}
-    </button>
-  );
-}
-
 /** Ghost / secondary button */
 function BtnGhost({
   onClick, disabled, children, className = "",
@@ -77,8 +169,8 @@ function BtnGhost({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-2xl border border-border/80 bg-white/90 px-5 py-3.5 text-sm font-semibold text-ink backdrop-blur-sm transition-all duration-200
-        hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-md
+      className={`inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/90 bg-white px-5 py-3.5 text-sm font-semibold text-ink shadow-xs backdrop-blur-sm transition-all duration-200
+        hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-50/40 hover:text-red-700 hover:shadow-md
         active:translate-y-0 active:scale-[.975] focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none
         ${className}`}
     >
@@ -126,7 +218,7 @@ function BtnSubtle({
 /** Card wrapper */
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-[1.6rem] border border-border/60 bg-white shadow-card ${className}`}>
+    <div className={`rounded-[1.6rem] border border-border/70 bg-white shadow-card ${className}`}>
       {children}
     </div>
   );
@@ -137,8 +229,8 @@ function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInput
   return (
     <input
       {...props}
-      className={`w-full rounded-2xl border border-border bg-slate-50 px-4 py-4 text-sm font-sans text-ink outline-none placeholder:text-slate-muted/80
-        transition-all duration-200 focus:border-emerald focus:bg-white focus:ring-4 focus:ring-emerald/10
+      className={`w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm font-sans text-ink outline-none placeholder:text-slate-muted/80
+        transition-all duration-200 focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/15
         ${className}`}
     />
   );
@@ -151,11 +243,11 @@ function Badge({ children, variant = "slate", className = "" }: {
   className?: string;
 }) {
   const variants = {
-    green: "bg-emerald-xlight text-emerald-text border border-emerald-light",
+    green: "bg-red-50 text-red-700 border border-red-200/80",
     blue:  "bg-blue-50 text-blue-700 border border-blue-100",
     amber: "bg-amber-50 text-amber-700 border border-amber-100",
     slate: "bg-slate-100 text-slate-600 border border-slate-200",
-    red:   "bg-red-50 text-red-700 border border-red-100",
+    red:   "bg-red-50 text-red-700 border border-red-200/80",
   };
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[.68rem] font-bold tracking-widest uppercase ${variants[variant]} ${className}`}>
@@ -164,12 +256,12 @@ function Badge({ children, variant = "slate", className = "" }: {
   );
 }
 
-/** Animated live dot */
+/** Animated live dot — vibrant red */
 function LiveDot() {
   return (
     <span className="relative inline-flex h-2.5 w-2.5">
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald opacity-50" />
-      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald" />
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-600" />
     </span>
   );
 }
@@ -226,9 +318,12 @@ function App() {
       </div>
       {route !== "patient" && <footer className="mt-12 border-t border-border">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 text-xs font-medium text-slate-muted">
-          <span>QueueCare · receptionist-free waiting</span>
+          <span className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-red-600"></span>
+            QueueCare · receptionist-free virtual waiting
+          </span>
           <span className="flex items-center gap-1.5">
-            <ShieldCheck size={13} className="text-emerald" /> Private queue session
+            <ShieldCheck size={13} className="text-red-600" /> Private queue session
           </span>
         </div>
       </footer>}
@@ -239,28 +334,22 @@ function App() {
 /* ─── Header ────────────────────────────────── */
 function Header({ route, navigate }: { route: string; navigate: (route: string) => void }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-white/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-white/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-6">
-        <button onClick={() => navigate("home")} className="flex items-center gap-3 rounded-2xl p-1 transition-all hover:opacity-80 focus-visible:outline-none">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-ink via-ink-soft to-ink-xsoft text-emerald-glow shadow-btn">
-            <HeartPulse size={17} strokeWidth={2.5} />
-          </span>
-          <span>
-            <span className="block text-[13px] font-extrabold tracking-tight text-ink">QueueCare</span>
-            <span className="block text-[10px] font-medium text-slate-muted">virtual waiting room</span>
-          </span>
+        <button onClick={() => navigate("home")} className="rounded-2xl p-1 transition-all hover:opacity-85 focus-visible:outline-none">
+          <QueueCareLogo size="md" />
         </button>
 
-        <div className="hidden items-center gap-2.5 sm:flex">
+        <div className="hidden items-center gap-2 rounded-full border border-red-100 bg-red-50/80 px-3.5 py-1.5 sm:flex shadow-xs">
           <LiveDot />
-          <span className="text-xs font-semibold text-slate-soft">Live queue</span>
+          <span className="text-xs font-bold text-red-700">Live queue session</span>
         </div>
 
         <BtnGhost
           onClick={() => navigate(route === "doctor" ? "patient" : "doctor")}
-          className="!px-3.5 !py-2 !text-xs !font-semibold sm:!px-4"
+          className="!px-3.5 !py-2 !text-xs !font-semibold sm:!px-4 border-red-100 hover:border-red-200 hover:bg-red-50/40"
         >
-          <Stethoscope size={13} />
+          <Stethoscope size={13} className="text-red-600" />
           {route === "doctor" ? "Patient view" : "Doctor dashboard"}
         </BtnGhost>
       </div>
@@ -274,15 +363,16 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
     <main>
       {/* Hero */}
       <section className="hero-grid relative mx-auto grid max-w-7xl gap-12 overflow-hidden px-6 pb-20 pt-16 lg:grid-cols-2 lg:items-center lg:pt-24">
-        {/* Ambient glow */}
-        <div className="pointer-events-none absolute -top-24 right-0 h-96 w-96 rounded-full bg-emerald/10 blur-3xl" />
+        {/* Ambient glow in medical red */}
+        <div className="pointer-events-none absolute -top-24 right-0 h-96 w-96 rounded-full bg-red-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 left-12 h-64 w-64 rounded-full bg-red-600/5 blur-3xl" />
         <div className="relative z-10">
-          <Badge variant="green" className="mb-7">
+          <Badge variant="red" className="mb-7 shadow-xs">
             <Sparkles size={11} /> Less waiting. More care.
           </Badge>
           <h1 className="max-w-xl text-5xl font-black leading-[1.03] tracking-[-.05em] text-ink sm:text-6xl lg:text-[4.5rem]">
             Your place in line,{" "}
-            <span className="bg-gradient-to-r from-emerald to-emerald-dark bg-clip-text text-transparent">without the line.</span>
+            <span className="bg-gradient-to-r from-red-600 via-rose-600 to-red-700 bg-clip-text text-transparent">without the line.</span>
           </h1>
           <p className="mt-6 max-w-lg text-base leading-7 text-slate-soft">
             Scan the clinic QR, get your token, and wait comfortably nearby.
@@ -294,7 +384,7 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
               <QrCode size={17} /> Join the queue <ArrowRight size={15} />
             </BtnPrimary>
             <BtnGhost onClick={() => navigate("doctor")}>
-              <Stethoscope size={16} /> Doctor view
+              <Stethoscope size={16} className="text-red-600" /> Doctor view
             </BtnGhost>
           </div>
 
@@ -304,8 +394,8 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
               { icon: <MessageCircle size={12} />, label: "WhatsApp updates" },
               { icon: <MapPin size={12} />, label: "Join near clinic" },
             ].map(({ icon, label }) => (
-              <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-slate-soft shadow-sm backdrop-blur-sm">
-                <span className="text-emerald">{icon}</span> {label}
+              <span key={label} className="inline-flex items-center gap-1.5 rounded-full border border-red-100 bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-slate-soft shadow-xs backdrop-blur-sm">
+                <span className="text-red-600">{icon}</span> {label}
               </span>
             ))}
           </div>
@@ -315,7 +405,7 @@ function Home({ navigate, state }: { navigate: (route: string) => void; state: Q
       </section>
 
       {/* Feature strip */}
-      <section className="border-y border-border/60 bg-white/60 backdrop-blur-sm">
+      <section className="border-y border-border/70 bg-white/70 backdrop-blur-sm">
         <div className="mx-auto grid max-w-7xl gap-4 px-6 py-14 sm:grid-cols-3">
           <Feature icon={<QrCode size={20} />} title="One quick scan" text="The clinic QR stays on the wall. Scan it when you arrive." />
           <Feature icon={<Bell size={20} />} title="Stay in the loop" text="Get alerts at 10, 5, 3, 1 people ahead, and when called." />
@@ -331,35 +421,35 @@ function QueuePreview({ state }: { state: QueueState }) {
   const token = currentToken(state);
   return (
     <div className="[animation:var(--animate-slide-up)] relative mx-auto w-full max-w-md">
-      <div className="absolute -inset-4 -z-10 rounded-[2.5rem] bg-emerald/12 blur-3xl" />
-      <div className="rounded-[1.8rem] bg-gradient-to-br from-ink via-ink-soft to-ink-xsoft p-6 text-white shadow-card sm:p-8">
+      <div className="absolute -inset-4 -z-10 rounded-[2.5rem] bg-red-500/12 blur-3xl" />
+      <div className="rounded-[1.8rem] border border-red-100 bg-white p-6 shadow-2xl shadow-red-500/10 sm:p-8">
         {/* Header row */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-5">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-5">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-emerald-glow">Aster Lane Clinic</p>
-            <p className="mt-1 text-xs text-white/50">Evening queue · open now</p>
+            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-red-600">{state.clinicName}</p>
+            <p className="mt-1 text-xs text-slate-soft">Virtual waiting room · open now</p>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-dark/80 px-3 py-1 text-[.65rem] font-bold text-white backdrop-blur-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[.65rem] font-bold text-red-700">
             <LiveDot /> LIVE
           </span>
         </div>
 
         {/* Big token number */}
         <div className="py-9 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[.2em] text-white/35">Now serving</p>
-          <p className="mt-2 text-8xl font-black tracking-tight">{token ? tokenLabel(token.tokenNumber) : "—"}</p>
-          <p className="mt-3 text-sm text-white/45">{waiting} {waiting === 1 ? "person" : "people"} waiting</p>
+          <p className="text-[10px] font-bold uppercase tracking-[.2em] text-slate-muted">Now serving</p>
+          <p className="mt-2 text-8xl font-black tracking-tight text-red-600">{token ? tokenLabel(token.tokenNumber) : "—"}</p>
+          <p className="mt-3 text-sm font-semibold text-slate-soft">{waiting} {waiting === 1 ? "person" : "people"} waiting</p>
         </div>
 
         {/* Stat pills */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-white/8 p-4 ring-1 ring-white/10">
-            <p className="text-[10px] font-semibold text-white/40">Next update</p>
-            <p className="mt-1 text-sm font-bold">WhatsApp</p>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-[10px] font-semibold text-slate-muted uppercase tracking-wider">Next update</p>
+            <p className="mt-1 text-sm font-bold text-ink">WhatsApp</p>
           </div>
-          <div className="rounded-2xl bg-emerald-dark/70 p-4 ring-1 ring-emerald-glow/20">
-            <p className="text-[10px] font-semibold text-emerald-light/70">Session</p>
-            <p className="mt-1 text-sm font-bold text-white">Until doctor ends</p>
+          <div className="rounded-2xl border border-red-100 bg-red-50/70 p-4">
+            <p className="text-[10px] font-semibold text-red-700/70 uppercase tracking-wider">Session</p>
+            <p className="mt-1 text-sm font-bold text-red-700">Until doctor ends</p>
           </div>
         </div>
       </div>
@@ -369,11 +459,11 @@ function QueuePreview({ state }: { state: QueueState }) {
 
 function Feature({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
-    <Card className="group cursor-default p-6 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card-hover">
-      <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-emerald-xlight to-emerald-light text-emerald transition-all duration-300 group-hover:scale-110 group-hover:shadow-btn-emerald">
+    <Card className="group cursor-default p-6 transition-all duration-300 hover:-translate-y-1.5 hover:border-red-200 hover:shadow-card-hover">
+      <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-red-50 to-red-100 text-red-600 transition-all duration-300 group-hover:scale-110 group-hover:bg-red-600 group-hover:text-white group-hover:shadow-btn-red">
         {icon}
       </div>
-      <h3 className="font-bold text-ink">{title}</h3>
+      <h3 className="text-base font-bold text-ink">{title}</h3>
       <p className="mt-2 text-sm leading-6 text-slate-soft">{text}</p>
     </Card>
   );
