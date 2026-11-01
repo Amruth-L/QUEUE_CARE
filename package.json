@@ -6,29 +6,28 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently --kill-others --names \"API,UI\" --prefix-colors \"cyan,magenta\" \"node src/server.js\" \"vite\"",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "server": "node src/server.js",
     "start": "npm run build && node src/server.js",
     "test": "node --test"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "latest",
-    "@vitejs/plugin-react": "latest",
-    "autoprefixer": "latest",
-    "lucide-react": "latest",
-    "qrcode": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "tailwindcss": "latest",
-    "typescript": "latest",
-    "vite": "latest",
-    "ws": "latest"
+    "lucide-react": "1.45.0",
+    "qrcode": "1.5.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "ws": "8.21.3"
   },
   "devDependencies": {
-    "@types/qrcode": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "concurrently": "^10.0.5"
+    "@tailwindcss/postcss": "4.3.3",
+    "@vitejs/plugin-react": "6.1.1",
+    "autoprefixer": "10.5.6",
+    "concurrently": "10.0.6",
+    "tailwindcss": "4.3.3",
+    "vite": "8.3.5"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

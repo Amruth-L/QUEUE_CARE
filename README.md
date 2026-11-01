@@ -49,7 +49,7 @@ Node.js Server  (src/server.js — port 8787)
    Meta Business — approved message templates
 ```
 
-- **Frontend** — React + TypeScript, built by Vite, served as static files from `/dist` by the same Node server.
+- **Frontend** — React + JavaScript (JSX), built by Vite, served as static files from `/dist` by the same Node server.
 - **Backend** — Plain Node.js HTTP server (no framework). Queue state is held in memory for the session.
 - **Real-time** — WebSocket server pushes state updates to all connected clients on every queue change.
 
@@ -59,14 +59,14 @@ Node.js Server  (src/server.js — port 8787)
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22.12+
 - npm 10+
 
 ### Setup
 
 ```bash
 # 1. Install dependencies
-npm install
+npm ci
 
 # 2. Copy environment file
 cp .env.example .env
@@ -75,6 +75,8 @@ cp .env.example .env
 # 3. Start dev server (API + Vite HMR together)
 npm run dev
 ```
+
+The server loads the optional `.env` automatically. Exported environment variables take precedence. The frontend build uses JavaScript directly; there is no TypeScript compilation step. Tailwind v4 theme tokens live in `src/index.css`; the unused legacy Tailwind configuration was removed.
 
 The dev server starts at:
 
@@ -98,13 +100,22 @@ The dev server starts at:
 | Mobile number | `+919999000000` |
 | OTP | `123456` (also printed in API terminal) |
 
+### Build and serve
+
+```bash
+npm run build
+npm run server
+```
+
+Open `http://localhost:8787`. `npm start` runs both commands. `npm run preview` previews the built UI through Vite; the API server must also be running.
+
 ### Run tests
 
 ```bash
 npm test
 ```
 
-All 8 unit tests cover queue logic, notification idempotency, family token rules, and WhatsApp retry behavior.
+All 15 tests cover queue logic, notification retries, family token rules, API authentication and privacy, session expiry, demo reset, and client error handling.
 
 ---
 
@@ -292,7 +303,7 @@ sudo certbot --nginx -d your-domain.com
 Create a `Dockerfile`:
 
 ```dockerfile
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -329,7 +340,7 @@ waiting → called → skipped → waiting (recalled, moves to priority front)
 
 ### Notification milestones
 
-Each patient receives exactly one WhatsApp message at each threshold (idempotent — never duplicated even if the server restarts mid-session):
+Each patient receives exactly one WhatsApp message at each threshold (idempotent — deduplicated within the running in-memory session; state and delivery records are lost on restart):
 
 | Milestone | Template used |
 |-----------|--------------|
@@ -354,6 +365,7 @@ Each patient receives exactly one WhatsApp message at each threshold (idempotent
 | **Skip current** | Current → `skipped` (stays in list for recall) |
 | **Recall skipped** | Skipped → `waiting` with **priority flag** (goes to front of queue) |
 | **Stop new tokens** | Closes intake; existing patients remain |
+| **Reset demo queue** | Authenticated doctor only; unavailable in production; starts a fresh demo session |
 | **End session** | Closes session entirely |
 
 ### Security
@@ -369,7 +381,7 @@ Each patient receives exactly one WhatsApp message at each threshold (idempotent
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 19 + TypeScript |
+| Frontend | React 19 + JavaScript (JSX) |
 | Styling | Tailwind CSS v4 |
 | Bundler | Vite 8 |
 | Backend | Node.js ESM (no framework) |
@@ -389,19 +401,30 @@ Each patient receives exactly one WhatsApp message at each threshold (idempotent
 │   ├── queue.js           # Core queue state machine (ClinicQueue)
 │   ├── whatsapp.js        # Notification outbox + InMemoryWhatsAppProvider
 │   ├── meta-whatsapp.js   # Meta WhatsApp Cloud API adapter
-│   ├── store.ts           # Client-side state store (React/browser)
-│   ├── App.tsx            # Full React app — Patient and Doctor UI
+│   ├── store.js           # Client-side state store (React/browser)
+│   ├── App.jsx            # Full React app — Patient and Doctor UI
 │   └── index.css          # Tailwind + custom design tokens
 ├── test/
-│   └── queue.test.js      # 8 unit tests for queue logic
+│   ├── queue.test.js      # 8 queue and notification tests
+│   ├── server.test.js     # 3 HTTP and WebSocket integration tests
+│   └── store.test.js      # 4 client store regression tests
 ├── index.html
 ├── .env.example           # Environment variable template
 ├── package.json
-├── vite.config.ts
-└── tailwind.config.ts
+├── vite.config.js
+└── postcss.config.cjs     # Tailwind CSS v4 integration
 ```
 
 ---
+
+## Runtime behavior and limitations
+
+- The API is the source of truth. A disconnected browser shows a status message and never creates a local token. Live updates reconnect automatically.
+- Patient join links and QR codes use the configured `CLINIC_ID`.
+- Closing a token view does not cancel the server token. There is no patient cancellation endpoint.
+- State, sessions, and notification records remain in memory. Restarting the server clears them; this is not persistent storage.
+- Local demo OTP is `123456`; production login requires implementing a real OTP sender.
+- Real WhatsApp delivery requires credentials and approved templates. Automated tests use the mock provider.
 
 ## Production Checklist
 
