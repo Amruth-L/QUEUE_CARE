@@ -4,7 +4,13 @@ QueueCare is a clinic queue management application built with **React, JavaScrip
 
 ## Website
 
-Deployment is being prepared for Render. A verified live website URL has not been assigned yet.
+**Live website: [queue-care-mf6i.onrender.com](https://queue-care-mf6i.onrender.com)**
+
+QueueCare is hosted on Render as a Node web service. The same service serves the React frontend, HTTP API, and live WebSocket updates.
+
+- [Patient registration](https://queue-care-mf6i.onrender.com/?join=clinic-demo)
+- [Doctor portal](https://queue-care-mf6i.onrender.com/?doctor=1) — production OTP delivery is still required for sign-in.
+- [GitHub repository](https://github.com/Amruth-L/QUEUE_CARE)
 
 ## What the application does
 
@@ -18,7 +24,7 @@ Deployment is being prepared for Render. A verified live website URL has not bee
 
 ## Current project status
 
-This is a working local demonstration with deployment configuration. It uses an in-memory queue, so a server restart or redeployment clears queue entries, login sessions, and notification history. Run a single server instance until shared persistent storage is implemented.
+The application is deployed on Render and can also be run locally. The hosted home page, frontend assets, configuration API, and WebSocket connection have been verified. It uses an in-memory queue, so a server restart or redeployment clears queue entries, login sessions, and notification history. Run a single server instance until shared persistent storage is implemented.
 
 Doctor login uses a demonstration OTP during local development. **A production OTP delivery provider has not been implemented.** With `NODE_ENV=production`, the server disables demo reset and rejects OTP requests instead of exposing the development code. A hosted production instance therefore cannot complete doctor sign-in until that integration is added. Setting `DOCTOR_PHONES` alone does not enable OTP delivery.
 
@@ -77,7 +83,7 @@ Use a **Node web service** so that the frontend, API, and WebSocket connection s
 2. In the [Render dashboard](https://dashboard.render.com/), create a Blueprint and select that repository. Alternatively, create a Web Service with the settings below.
 3. Review the free instance configuration and deploy the service.
 4. Wait for a successful deployment, then open the HTTPS address shown by Render. Confirm that the home page and `/api/config` respond successfully before sharing the URL.
-5. Add the verified address to the Website section of this README. For a custom domain, configure it in Render and set `PUBLIC_APP_URL` to that domain's HTTPS origin.
+5. If deploying a separate instance, update the Website section of this README with its verified address. For a custom domain, configure it in Render and set `PUBLIC_APP_URL` to that domain's HTTPS origin.
 
 | Setting | Value |
 | --- | --- |
