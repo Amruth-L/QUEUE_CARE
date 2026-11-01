@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: queue-care
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node src/server.js
+    healthCheckPath: /api/config
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: CLINIC_ID
+        value: clinic-demo
+      - key: CLINIC_NAME
+        value: Aster Lane Clinic

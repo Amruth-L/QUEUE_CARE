@@ -124,6 +124,25 @@ test("production disables demo reset and unconfigured OTP delivery", async (t) =
   );
 });
 
+test("public QR origin uses Render's URL and permits a custom domain override", async (t) => {
+  const rendered = await startServer(t, {
+    PUBLIC_APP_URL: "",
+    RENDER_EXTERNAL_URL: "https://queue-care-example.onrender.com/",
+  });
+  assert.equal(
+    (await rendered.api("/api/config")).body.publicUrl,
+    "https://queue-care-example.onrender.com",
+  );
+  const custom = await startServer(t, {
+    PUBLIC_APP_URL: "https://queue.example.com/",
+    RENDER_EXTERNAL_URL: "https://queue-care-example.onrender.com",
+  });
+  assert.equal(
+    (await custom.api("/api/config")).body.publicUrl,
+    "https://queue.example.com",
+  );
+});
+
 test("WebSocket no longer exposes doctor details after session expiry", async (t) => {
   const { base, api } = await startServer(t, { DOCTOR_SESSION_TTL_MS: "500" });
   const token = await login(api);

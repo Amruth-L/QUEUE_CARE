@@ -28,7 +28,9 @@ function networkUrl() {
   }
   return `http://localhost:${port}`;
 }
-const publicUrl = process.env.PUBLIC_APP_URL ?? networkUrl();
+const publicUrl = (
+  process.env.PUBLIC_APP_URL || process.env.RENDER_EXTERNAL_URL || networkUrl()
+).replace(/\/+$/, "");
 const clinicId = process.env.CLINIC_ID ?? "clinic-demo";
 const clinicName = process.env.CLINIC_NAME ?? "Aster Lane Clinic";
 const doctorSessionTtlMs = Number(
